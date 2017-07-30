@@ -48,7 +48,7 @@ module.exports = function(passport){
 	/* GET apps Page */
 	router.get('/applications', isAuthenticated,Apps.all);
     router.post('/applications/create', isAuthenticated,Apps.create);
-    router.post('/applications/destroy', isAuthenticated,Apps.create);
+    router.post('/applications/destroy/:id', isAuthenticated,Apps.destroy);
 	/* Handle Logout */
 	router.get('/signout', function(req, res) {
 		req.logout();

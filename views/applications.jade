@@ -1,15 +1,17 @@
 extends layout
 
 block content
-    h1.text-center All Todos
+    h1.text-center All Your apps
     .panel.panel-default
         for app in apps
             .panel-body
-                a(href='/applications/#{app._id}') #{app.name}
+                a(href='/application/#{app._id}') #{app.name}
                 form(action='/applications/destroy/#{app._id}', method='post')
                     input.btn.btn-danger.pull-right(type='submit', value='Delete')
     form(method='post', action='/applications/create')
         .input-group
             input.form-control(type='text', placeholder='app name', name='name')
+			input.form-control(type='text', placeholder='description', name='description')
+			input.form-control(type='text', placeholder='app key', name='app_key')
             span.input-group-btn
                 input.btn.btn-success(type='submit', value='Add app')

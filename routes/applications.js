@@ -3,8 +3,9 @@ var mongoose = require('mongoose'),
 
 module.exports = {
     all: function(req, res){
-        console.log('we are in appls.all')
-        Applications.find({}, function(err, applications){
+        console.log('we are in appls.all');
+        console.log('user is' + req.user);
+        Applications.find({'user_id': req.user._id}, function(err, applications){
             if(err) res.render('error', { error: 'Could not fetch items from database :('});
             console.log('in the callback')
             res.render('applications', { apps: applications });
@@ -18,7 +19,7 @@ module.exports = {
     create: function(req, res){
         var appName = req.body.name;
         // create todo
-        Applications.create({ name: appName }, function(err, applications){
+        Applications.create({ name: appName,user_id: req.user._id }, function(err, applications){
             if(err) res.render('error', { error: 'Error creating your apps :('})
             // reload collection
             res.redirect('/applications');
