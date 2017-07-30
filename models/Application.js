@@ -3,10 +3,12 @@
  */
 
 var mongoose = require('mongoose');
+Schema = mongoose.Schema;
 
-module.exports = mongoose.model('Apps',{
+var applicationSchema = new Schema({
     id: String,
     user_id: String,
     name: String,
     description: String
 });
+module.exports = mongoose.model('Applications', applicationSchema);

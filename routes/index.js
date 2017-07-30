@@ -1,6 +1,6 @@
 var express = require('express');
 var router = express.Router();
-var apps = require('../models/apps');
+var Apps = require('./applications');
 
 var isAuthenticated = function (req, res, next) {
 	// if user is authenticated in the session, call the next() to call the next request handler 
@@ -46,18 +46,9 @@ module.exports = function(passport){
 	});
 
 	/* GET apps Page */
-	router.get('/applications', isAuthenticated, function(req, res){
-		var user= req.user;
-		getUserApps(function(user) {
-			apps.find({'user_id' :user.id}),function (err, apps){
-				if (err) {
-					console.log('error quering apps ' + err);
-				}
-			}
-		},
-		res.render('applications', { apps: apps }));
-	});
-
+	router.get('/applications', isAuthenticated,Apps.all);
+    router.post('/applications/create', isAuthenticated,Apps.create);
+    router.post('/applications/destroy', isAuthenticated,Apps.create);
 	/* Handle Logout */
 	router.get('/signout', function(req, res) {
 		req.logout();
@@ -66,7 +57,6 @@ module.exports = function(passport){
 
 	return router;
 }
-
 
 
 
