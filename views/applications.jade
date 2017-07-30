@@ -6,12 +6,19 @@ block content
         for app in apps
             .panel-body
                 a(href='/application/#{app._id}') #{app.name}
+                #{app.description}
                 form(action='/applications/destroy/#{app._id}', method='post')
                     input.btn.btn-danger.pull-right(type='submit', value='Delete')
+
+
     form(method='post', action='/applications/create')
-        .input-group
+        div
+            label(for='name') Name:
             input.form-control(type='text', placeholder='app name', name='name')
-			input.form-control(type='text', placeholder='description', name='description')
-			input.form-control(type='text', placeholder='app key', name='app_key')
-            span.input-group-btn
-                input.btn.btn-success(type='submit', value='Add app')
+        div
+            label(for='description') Description:
+            input.form-control(type='text', placeholder='description', name='description')
+        div
+            label(for='app key') key:
+            input.form-control(type='text', placeholder='app key', name='app_key')
+        button.btn.btn-primary(type='submit', value='Add app') create you app

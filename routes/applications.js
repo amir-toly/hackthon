@@ -12,14 +12,20 @@ module.exports = {
         });
     },
     viewOne: function(req, res){
-        Applications.find({ _id: req.params.id }, function(err, applications){
-            res.render('applications', { apps: applications[0] })
+        var id = req.params.id;
+        console.log('id to be edited'+ id);
+        Applications.findById(id, function(err, applications){
+            if(err) res.render('error', { error: 'Could not fetch items from database :('});
+            console.log('App to be edited'+applications);
+
+
+            res.render('application', { oneapp: applications })
         });
     },
     create: function(req, res){
         var appName = req.body.name;
         // create todo
-        Applications.create({ name: appName,user_id: req.user._id }, function(err, applications){
+        Applications.create({ name: appName,user_id: req.user._id, description: req.body.description, app_key: req.body.app_key  }, function(err, applications){
             if(err) res.render('error', { error: 'Error creating your apps :('})
             // reload collection
             res.redirect('/applications');
@@ -33,8 +39,14 @@ module.exports = {
             res.redirect('/applications');
         });
     },
-    edit: function(req, applications){
-        Applications.findOneAndUpdate({ _id: req.params.id }, {name: req.body.name}, function(err, todo){
+    edit: function(req, res){
+        var id = req.params.id;
+        console.log('editing app name'+ req.body.name);
+        console.log('editing app desc'+ req.body.description);
+        Applications.findOneAndUpdate({ _id: req.params.id },
+                {$set: {name: req.body.name, description: req.body.description, app_key: req.body.app_key}},
+            function(err, applications){
+                if(err) res.render('error', { error: 'Error updating Application'});
             res.redirect('/applications');
         });
     }

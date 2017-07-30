@@ -1,0 +1,14 @@
+//
+   Created by Mathias on 7/30/2017.
+
+extends layout
+
+block content
+    form(method='post', action='/applications/edit/#{oneapp._id}')
+        h1
+            input(value='#{oneapp.name}', name='name')
+            input(value='#{oneapp.description}', name='description')
+            input(value='#{oneapp.app_key}', name='app_key')
+
+            input(type='submit', value='Update').btn.btn-primary.btn-lg
+            a(href='/applications').btn.btn-default.btn-lg Back
