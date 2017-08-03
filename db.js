@@ -1,4 +1,4 @@
 module.exports = {
-	//'url' : 'mongodb://<dbuser>:<dbpassword>@novus.modulusmongo.net:27017/<dbName>'
+	//'url' : 'mongodb://admin:@SG-hackathon-10720:27017/admin'
 	'url' : 'mongodb://localhost/test'
 }

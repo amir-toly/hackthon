@@ -28,13 +28,18 @@ module.exports = {
 
                             getAccounts(mop.access_token, function(err, body) {
 
-                                //MQT.startAndPush('First message to MQTT');
+                                MQT.startAndPush(JSON.stringify(body));
                                 console.log('accounts are: ' + body)
 
-                            });
+                                Mop.findOneAndUpdate({ _id: state },
+                                                {$set: {accounts: body}},
+                                            function(err, mop){
+                                                if(err) res.render('error', { error: 'Error updating Mop'});
+                                            res.redirect('/application/'+state);
+                                        });
 
-                            console.log('mop is: ' + mop);
-                            res.redirect('/applications');
+
+                            });
 
             });
         });
