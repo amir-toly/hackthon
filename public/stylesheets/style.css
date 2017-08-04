@@ -86,3 +86,7 @@ h1.error-message{
 ul.user-details{
     list-style: none;
 }
+div.row.space{
+    margin: 10px 0;
+    text-align: center;
+}
