@@ -98,6 +98,12 @@ uint8_t textfield_i=0;
 #define STATUS_X 10
 #define STATUS_Y 65
 
+#include <Wire.h>
+#include <UnoWiFiDevEd.h>
+
+#define CONNECTOR "mqtt"
+#define TOPIC "arduino/data"
+
 
 
 #include <MCUFRIEND_kbv.h>
@@ -113,6 +119,7 @@ char buttonlabels[2][5] = {"Key", "UPD." };
 uint16_t buttoncolors[15] = { ILI9341_RED,ILI9341_DARKGREEN};
                              
 void setup(void) {
+  Ciao.begin();
   Serial.begin(9600);
   Serial.println(F("TFT LCD test"));
 
@@ -165,10 +172,14 @@ void setup(void) {
   tft.setRotation(0);
   tft.fillScreen(BLACK);
   createButton();
-  
+
 
  
 }
+void loop(void) {
+  checkButton();
+}
+
 void createButton(void){
 
 
@@ -205,9 +216,7 @@ void status(char *msg) {
 }
 #define MINPRESSURE 10
 #define MAXPRESSURE 1000
-void loop(void) {
-  checkButton();
-  }
+
   
 void checkButton(void){
   /*TSPoint p;
@@ -270,11 +279,25 @@ void checkButton(void){
         tft.setTextColor(TEXT_TCOLOR, ILI9341_BLACK);
         tft.setTextSize(TEXT_TSIZE);
         tft.print(textfield);
-		delay(100); // UI debouncing
+    delay(100); // UI debouncing
     }
+
 }
+
+}
+
+void readData(void){
+  CiaoData data = Ciao.read(CONNECTOR, TOPIC);
+  if (!data.isEmpty()){
+    const char* value = data.get(2);
+    Serial.println(value);
+  }
   
 }
+
+
+
+
 
 
 
