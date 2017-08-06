@@ -8,8 +8,8 @@ var MQT = require('./mqt');
 var Mop = mongoose.model('Mop');
 var Applications = mongoose.model('Applications');
 
-var client_id = '';
-var client_secret = '';
+var client_id = process.env.CLIENT_ID;
+var client_secret = process.env.CLIENT_SECRET;
 
 module.exports = {
 
