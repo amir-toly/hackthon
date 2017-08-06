@@ -12,7 +12,6 @@ block content
 								li Email    ---> #{user.email}
 								li First Name ---> #{user.firstName} 
 								li Last Name ---> #{user.lastName}
-					a(href='/applications', class='text-center new-account') applications
+					a(href='/applications', class='text-center new-account') Your Applications
 					a(href='/signout', class='text-center new-account') Sign Out
 
-					a(href='https://sandbox.api.macquariebank.io/connect/v1/user-interface/login?client_id=&state='+user.username, target='_self' class='text-center new-account') connect to mac account

@@ -2,6 +2,7 @@ var express = require('express');
 var router = express.Router();
 var Apps = require('./applications');
 var Mop = require('./mop');
+var Refresh = require('./refresh');
 
 var isAuthenticated = function (req, res, next) {
 	// if user is authenticated in the session, call the next() to call the next request handler 
@@ -48,6 +49,7 @@ module.exports = function(passport){
 
 	/* Mop Callback*/
 	router.get('/callback', Mop.handleCallback)
+    router.get('/refresh-all', Refresh.handleRefresh)
 
 	/* GET apps Page */
 	router.get('/applications', isAuthenticated,Apps.all);

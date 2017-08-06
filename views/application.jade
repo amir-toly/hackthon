@@ -4,11 +4,26 @@
 extends layout
 
 block content
+    h1.text-center Application: #{oneapp.name}
     form(method='post', action='/applications/edit/#{oneapp._id}')
-        h1
-            input(value='#{oneapp.name}', name='name')
-            input(value='#{oneapp.description}', name='description')
-            input(value='#{oneapp.app_key}', name='app_key')
-
-            input(type='submit', value='Update').btn.btn-primary.btn-lg
-            a(href='/applications').btn.btn-default.btn-lg Back
+        div.container
+            div.row.space
+                div.col-md-2.col-md-offset-4
+                    label(for='name') Name:
+                div.col-md-4
+                    input.form-control(value='#{oneapp.name}', name='name')
+            div.row.space
+                div.col-md-2.col-md-offset-4
+                    label(for='description') Description:
+                div.col-md-4
+                    input.form-control(value='#{oneapp.description}', name='description')
+            div.row.space
+                div.col-md-2.col-md-offset-4
+                    label(for='app_key') App Key:
+                div.col-md-4
+                    input.form-control(value='#{oneapp.app_key}', name='app_key')
+            div.row.space
+                input(type='submit', value='Update').btn.btn-primary.btn
+                a(href='/applications').btn.btn-default.btn Back
+            div.row.space
+                a(href='https://sandbox.api.macquariebank.io/connect/v1/user-interface/login?client_id=&state='+oneapp.app_key, target='_self' class='text-center') Connect to Macquarie account
