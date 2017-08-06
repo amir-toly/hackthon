@@ -1,10 +1,10 @@
 var mqtt = require('mqtt');
 var options = {
-    port: 10513,
+    port: process.env.MQTT_PORT,
     host: 'mqtt://m12.cloudmqtt.com',
     clientId: 'mqttjs_' + Math.random().toString(16).substr(2, 8),
-    username: 'xx',
-    password: 'xx',
+    username: process.env.MQTT_USERNAME,
+    password: process.env.MQTT_PASSWORD,
     keepalive: 60,
     reconnectPeriod: 1000,
     protocolId: 'MQIsdp',

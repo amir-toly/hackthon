@@ -26,4 +26,4 @@ block content
                 input(type='submit', value='Update').btn.btn-primary.btn
                 a(href='/applications').btn.btn-default.btn Back
             div.row.space
-                a(href='https://sandbox.api.macquariebank.io/connect/v1/user-interface/login?client_id=&state='+oneapp.app_key, target='_self' class='text-center') Connect to Macquarie account
+                a(href='https://sandbox.api.macquariebank.io/connect/v1/user-interface/login?client_id='+process.env.CLIENT_ID+'&state='+oneapp.app_key, target='_self' class='text-center') Connect to Macquarie account
