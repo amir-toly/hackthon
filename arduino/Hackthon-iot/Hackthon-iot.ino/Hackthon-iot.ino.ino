@@ -1,3 +1,5 @@
+#include <TimedAction.h>
+
 // IMPORTANT: Adafruit_TFTLCD LIBRARY MUST BE SPECIFICALLY
 // CONFIGURED FOR EITHER THE TFT SHIELD OR THE BREAKOUT BOARD.
 // SEE RELEVANT COMMENTS IN Adafruit_TFTLCD.h FOR SETUP.
@@ -110,7 +112,7 @@ uint8_t textfield_i=0;
 #include <UnoWiFiDevEd.h>
 
 #define CONNECTOR "mqtt"
-#define TOPIC_UP "refresh"
+#define TOPIC_UP "/refresh"
 #define TOPIC "/topic/balances"
 
 #include <MCUFRIEND_kbv.h>
@@ -124,6 +126,8 @@ Adafruit_GFX_Button buttons[2];
 /* create 15 buttons, in classic candybar phone style */
 char buttonlabels[2][5] = {"Key", "UPD." };
 uint16_t buttoncolors[15] = { ILI9341_RED,ILI9341_DARKGREEN};
+//TimedAction displayAcctThread = TimedAction(3000,displayAcct);
+int acctNumber =0;
                              
 void setup(void) {
   Ciao.begin();
@@ -226,12 +230,15 @@ void status(char *msg) {
 
 void keyDisplay(String msg) {
   tft.setRotation(1);
-  tft.fillRect(KEY_X, KEY_Y, 240, 8, ILI9341_BLACK);
+   tft.fillRect(INFO_X, INFO_Y, 190, 190, ILI9341_BLACK);
+  //tft.fillRect(KEY_X, KEY_Y, 240, 8, ILI9341_BLACK);
   tft.setCursor(KEY_X, KEY_Y);
   tft.setTextColor(ILI9341_WHITE);
   tft.setTextSize(3);
   tft.print(msg);
-   tft.setRotation(0);
+  delay(3000);
+  tft.fillRect(INFO_X, INFO_Y, 190, 190, ILI9341_BLACK);
+  tft.setRotation(0);
 }
 
 void bankDisplay(String acctName, String bal, String lastTrans ) {
