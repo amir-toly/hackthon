@@ -98,13 +98,20 @@ uint8_t textfield_i=0;
 #define STATUS_X 10
 #define STATUS_Y 65
 
+// We have a status line for like, is FONA working
+#define KEY_X 100
+#define KEY_Y 100
+
+// We have a status line for like, is FONA working
+#define INFO_X 90
+#define INFO_Y 20
+
 #include <Wire.h>
 #include <UnoWiFiDevEd.h>
 
 #define CONNECTOR "mqtt"
-#define TOPIC_UP "arduino/data"
-
-
+#define TOPIC_UP "refresh"
+#define TOPIC "/topic/balances"
 
 #include <MCUFRIEND_kbv.h>
 MCUFRIEND_kbv tft;
@@ -175,7 +182,7 @@ void setup(void) {
 void loop(void) {
 
   checkButton();
-
+ bankDisplay("black card","10.5","5");
  
 }
 
@@ -215,6 +222,34 @@ void status(char *msg) {
   tft.setTextColor(ILI9341_WHITE);
   tft.setTextSize(1);
   tft.print(msg);
+}
+
+void keyDisplay(String msg) {
+  tft.setRotation(1);
+  tft.fillRect(KEY_X, KEY_Y, 240, 8, ILI9341_BLACK);
+  tft.setCursor(KEY_X, KEY_Y);
+  tft.setTextColor(ILI9341_WHITE);
+  tft.setTextSize(3);
+  tft.print(msg);
+   tft.setRotation(0);
+}
+
+void bankDisplay(String acctName, String bal, String lastTrans ) {
+  tft.setRotation(1);
+
+  tft.setCursor(INFO_X, INFO_Y);
+  tft.setTextColor(ILI9341_WHITE);
+  tft.setTextSize(2);
+  tft.setCursor(INFO_X, INFO_Y);
+  tft.print("Acct: ");
+  tft.println(acctName);
+  tft.setCursor(INFO_X, INFO_Y+30);
+  tft.print("bal:");
+   tft.println(bal);
+     tft.setCursor(INFO_X, INFO_Y+60);
+     tft.print("last:");
+   tft.println(lastTrans);
+  tft.setRotation(0);
 }
 #define MINPRESSURE 10
 #define MAXPRESSURE 1000
@@ -266,6 +301,7 @@ void checkButton(void){
           
           status(F("Key"));
           //fona.hangUp();
+          keyDisplay("dfsdfsdf");
         }
         
         // refresh
@@ -292,7 +328,15 @@ void checkButton(void){
 void refresh(void){
   
     Ciao.write(CONNECTOR, TOPIC_UP, "{\"action\": \"refresh\"}");
-    uint16_t identifier=0x9341;
+    delay(500); // wait for replay
+    CiaoData data = Ciao.read(CONNECTOR, TOPIC);
+     if (!data.isEmpty()){
+      const char* value = data.get(2);
+        Serial.println(value);
+      }
+    
+    //screen set up
+    uint16_t identifier=0x9341;  
     tft.begin(identifier);
     createButton();
  
