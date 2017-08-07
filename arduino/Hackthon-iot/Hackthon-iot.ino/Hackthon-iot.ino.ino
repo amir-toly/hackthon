@@ -1,4 +1,6 @@
-#include <TimedAction.h>
+//#include <TimedAction.h>
+#include <ArduinoJson.h>
+
 
 // IMPORTANT: Adafruit_TFTLCD LIBRARY MUST BE SPECIFICALLY
 // CONFIGURED FOR EITHER THE TFT SHIELD OR THE BREAKOUT BOARD.
@@ -91,6 +93,10 @@ uint8_t textfield_i=0;
 #define YM 9   // can be a digital pin
 #define XP 8   // can be a digital pin
 
+#define MINPRESSURE 10
+#define MAXPRESSURE 1000
+
+
 #define TS_MINX 100
 #define TS_MAXX 920
 
@@ -108,12 +114,13 @@ uint8_t textfield_i=0;
 #define INFO_X 90
 #define INFO_Y 20
 
-#include <Wire.h>
+//#include <Wire.h>
 #include <UnoWiFiDevEd.h>
 
 #define CONNECTOR "mqtt"
 #define TOPIC_UP "/refresh"
-#define TOPIC "/topic/balances"
+#define TOPIC "/accounts/AE3F5"
+#define DEVICE_ID "AE3F5"
 
 #include <MCUFRIEND_kbv.h>
 MCUFRIEND_kbv tft;
@@ -125,72 +132,50 @@ TouchScreen ts = TouchScreen(XP, YP, XM, YM, 300);
 Adafruit_GFX_Button buttons[2];
 /* create 15 buttons, in classic candybar phone style */
 char buttonlabels[2][5] = {"Key", "UPD." };
-uint16_t buttoncolors[15] = { ILI9341_RED,ILI9341_DARKGREEN};
-//TimedAction displayAcctThread = TimedAction(3000,displayAcct);
-int acctNumber =0;
+uint16_t buttoncolors[2] = { ILI9341_RED,ILI9341_DARKGREEN};
+
+
+
+int updateInfo=0;
+
+
+int acctNumber=0;
+char accountNames[5][10];
+char balances[5][5];
+char lastTra[5][10];
+
+StaticJsonBuffer<200> jsonBuffer;
+
                              
 void setup(void) {
   Ciao.begin();
   Serial.begin(9600);
   Serial.println(F("TFT LCD test"));
-
-#ifdef USE_ADAFRUIT_SHIELD_PINOUT
-  Serial.println(F("Using Adafruit 2.4\" TFT Arduino Shield Pinout"));
-#else
-  Serial.println(F("Using Adafruit 2.4\" TFT Breakout Board Pinout"));
-#endif
-
   Serial.print("TFT size is "); Serial.print(tft.width()); Serial.print("x"); Serial.println(tft.height());
 
   tft.reset();
-
-  uint16_t identifier = tft.readID();
-  if(identifier == 0x9325) {
-    Serial.println(F("Found ILI9325 LCD driver"));
-  } else if(identifier == 0x9328) {
-    Serial.println(F("Found ILI9328 LCD driver"));
-  } else if(identifier == 0x4535) {
-    Serial.println(F("Found LGDP4535 LCD driver"));
-  }else if(identifier == 0x7575) {
-    Serial.println(F("Found HX8347G LCD driver"));
-  } else if(identifier == 0x9341) {
-    Serial.println(F("Found ILI9341 LCD driver"));
-  }else if(identifier == 0x7783) {
-    Serial.println(F("Found ST7781 LCD driver"));
-  }else if(identifier == 0x8230) {
-    Serial.println(F("Found UC8230 LCD driver"));  
-  }
-  else if(identifier == 0x8357) {
-    Serial.println(F("Found HX8357D LCD driver"));
-  } else if(identifier==0x0101)
-  {     
-      identifier=0x9341;
-       Serial.println(F("Found 0x9341 LCD driver"));
-  }else {
-    Serial.print(F("Unknown LCD driver chip: "));
-    Serial.println(identifier, HEX);
-    Serial.println(F("If using the Adafruit 2.8\" TFT Arduino shield, the line:"));
-    Serial.println(F("  #define USE_ADAFRUIT_SHIELD_PINOUT"));
-    Serial.println(F("should appear in the library header (Adafruit_TFT.h)."));
-    Serial.println(F("If using the breakout board, it should NOT be #defined!"));
-    Serial.println(F("Also if using the breakout, double-check that all wiring"));
-    Serial.println(F("matches the tutorial."));
-    identifier=0x9341;
-   
-  }
+  uint16_t identifier = 0x9341;
+  tft.begin(identifier);
+  createButton();
 
   
-  tft.begin(identifier);
- createButton();
+
 }
 void loop(void) {
 
-  checkButton();
- bankDisplay("black card","10.5","5");
+ checkButton();
+ 
+ if(updateInfo ==1){
+   Serial.println("updateInfo");
+   bankDisplay();
+   updateInfo =0;
+ }
  
 }
 
 void createButton(void){
+  uint16_t identifier=0x9341;  
+  tft.begin(identifier);
 
   tft.setRotation(0);
   tft.fillScreen(BLACK);
@@ -211,14 +196,7 @@ void createButton(void){
  tft.drawRect(TEXT_X, TEXT_Y, TEXT_W, TEXT_H, ILI9341_WHITE);
  delay(200);
  }
-// Print something in the mini status bar with either flashstring
-void status(const __FlashStringHelper *msg) {
-  tft.fillRect(STATUS_X, STATUS_Y, 240, 8, ILI9341_BLACK);
-  tft.setCursor(STATUS_X, STATUS_Y);
-  tft.setTextColor(ILI9341_WHITE);
-  tft.setTextSize(1);
-  tft.print(msg);
-}
+
 // or charstring
 void status(char *msg) {
   tft.fillRect(STATUS_X, STATUS_Y, 240, 8, ILI9341_BLACK);
@@ -228,38 +206,46 @@ void status(char *msg) {
   tft.print(msg);
 }
 
-void keyDisplay(String msg) {
+void keyDisplay() {
   tft.setRotation(1);
-   tft.fillRect(INFO_X, INFO_Y, 190, 190, ILI9341_BLACK);
+  tft.fillRect(INFO_X, INFO_Y, 220, 190, ILI9341_BLACK);
   //tft.fillRect(KEY_X, KEY_Y, 240, 8, ILI9341_BLACK);
   tft.setCursor(KEY_X, KEY_Y);
   tft.setTextColor(ILI9341_WHITE);
   tft.setTextSize(3);
-  tft.print(msg);
+  tft.print(DEVICE_ID);
+  Serial.println("key printed");
+  Serial.println(DEVICE_ID);
   delay(3000);
   tft.fillRect(INFO_X, INFO_Y, 190, 190, ILI9341_BLACK);
   tft.setRotation(0);
 }
 
-void bankDisplay(String acctName, String bal, String lastTrans ) {
+void bankDisplay() {
+  //set the display zone
   tft.setRotation(1);
-
   tft.setCursor(INFO_X, INFO_Y);
   tft.setTextColor(ILI9341_WHITE);
   tft.setTextSize(2);
   tft.setCursor(INFO_X, INFO_Y);
-  tft.print("Acct: ");
-  tft.println(acctName);
-  tft.setCursor(INFO_X, INFO_Y+30);
-  tft.print("bal:");
-   tft.println(bal);
-     tft.setCursor(INFO_X, INFO_Y+60);
-     tft.print("last:");
-   tft.println(lastTrans);
-  tft.setRotation(0);
+  if (acctNumber==0){
+    tft.println("Nothing to display");
+    tft.setCursor(INFO_X, INFO_Y+30);
+    tft.print("Please refresh");  
+  }else{
+    tft.print("Acct: ");
+    tft.println("hardcode");
+    tft.setCursor(INFO_X, INFO_Y+30);
+    tft.print("bal:");
+    tft.println("10");
+    tft.setCursor(INFO_X, INFO_Y+60);
+    tft.print("last:");
+    tft.println("hardcode");
+   
+  }
+   tft.setRotation(0);
 }
-#define MINPRESSURE 10
-#define MAXPRESSURE 1000
+
 
   
 void checkButton(void){
@@ -300,32 +286,27 @@ void checkButton(void){
     
     if (buttons[b].justPressed()) {
         buttons[b].drawButton(true);  // draw invert!
-        
-     
-
-        // key button
+  
+      // key button
         if (b == 0) {
-          
-          status(F("Key"));
+          status("Key");
           //fona.hangUp();
-          keyDisplay("dfsdfsdf");
+          keyDisplay();
+          
         }
         
         // refresh
         if (b == 1) {
-          status(F("refreshing"));
+
           Serial.print("refreshing ");
       Serial.print(textfield);
         refresh();
           //fona.callPhone(textfield);
         }
-          // update the current text field
-        Serial.println(textfield);
-        tft.setCursor(TEXTPOS_X , TEXTPOS_Y);
-        tft.setTextColor(TEXT_TCOLOR, ILI9341_BLACK);
-        tft.setTextSize(TEXT_TSIZE);
-        tft.print(textfield);
-    delay(100); // UI debouncing
+        updateInfo=1;
+     
+          status('\0');
+   
     }
 
 }
@@ -334,20 +315,40 @@ void checkButton(void){
 
 void refresh(void){
   
-    Ciao.write(CONNECTOR, TOPIC_UP, "{\"action\": \"refresh\"}");
-    delay(500); // wait for replay
-    CiaoData data = Ciao.read(CONNECTOR, TOPIC);
-     if (!data.isEmpty()){
-      const char* value = data.get(2);
-        Serial.println(value);
-      }
+    //Ciao.write(CONNECTOR, TOPIC_UP, "{\"action\": \"refresh\", \"DEVICE\": \"AE3F5\"}");
+    Ciao.write(CONNECTOR, TOPIC_UP, "{fsfsdf}");
+    delay(200); // wait for replay
+    receiveAccts();
     
     //screen set up
-    uint16_t identifier=0x9341;  
-    tft.begin(identifier);
+    
     createButton();
  
 }
+
+void receiveAccts(void){
+  CiaoData data = Ciao.read(CONNECTOR, TOPIC);
+ 
+    if (!data.isEmpty()){
+        String message = data.get(2);
+        Serial.println(message);
+        JsonObject& root = jsonBuffer.parseObject(message);
+        if (!root.success()) {
+          Serial.println("parseObject() failed");
+          return;
+         }
+         acctNumber= sizeof(root["account"])/sizeof(root["account"][0]);
+     
+         
+
+         
+     } else{
+    Serial.println("no update");
+   }
+  
+}
+
+
 
 
 
