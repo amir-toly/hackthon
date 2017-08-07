@@ -102,7 +102,7 @@ uint8_t textfield_i=0;
 #include <UnoWiFiDevEd.h>
 
 #define CONNECTOR "mqtt"
-#define TOPIC "arduino/data"
+#define TOPIC_UP "arduino/data"
 
 
 
@@ -168,20 +168,21 @@ void setup(void) {
    
   }
 
+  
   tft.begin(identifier);
-  tft.setRotation(0);
-  tft.fillScreen(BLACK);
-  createButton();
-
-
- 
+ createButton();
 }
 void loop(void) {
+
   checkButton();
+
+ 
 }
 
 void createButton(void){
 
+  tft.setRotation(0);
+  tft.fillScreen(BLACK);
 
   buttons[0].initButton(&tft,40, 
                 40,    // x, y, w, h, outline, fill, text
@@ -197,6 +198,7 @@ void createButton(void){
   
   // create 'text field'
  tft.drawRect(TEXT_X, TEXT_Y, TEXT_W, TEXT_H, ILI9341_WHITE);
+ delay(200);
  }
 // Print something in the mini status bar with either flashstring
 void status(const __FlashStringHelper *msg) {
@@ -261,6 +263,7 @@ void checkButton(void){
 
         // key button
         if (b == 0) {
+          
           status(F("Key"));
           //fona.hangUp();
         }
@@ -270,7 +273,7 @@ void checkButton(void){
           status(F("refreshing"));
           Serial.print("refreshing ");
       Serial.print(textfield);
-        
+        refresh();
           //fona.callPhone(textfield);
         }
           // update the current text field
@@ -286,13 +289,13 @@ void checkButton(void){
 
 }
 
-void readData(void){
-  CiaoData data = Ciao.read(CONNECTOR, TOPIC);
-  if (!data.isEmpty()){
-    const char* value = data.get(2);
-    Serial.println(value);
-  }
+void refresh(void){
   
+    Ciao.write(CONNECTOR, TOPIC_UP, "{\"action\": \"refresh\"}");
+    uint16_t identifier=0x9341;
+    tft.begin(identifier);
+    createButton();
+ 
 }
 
 
