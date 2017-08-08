@@ -13,3 +13,17 @@ spec:
       value: "mongo-hackathon"
     - name: DB_NAME
       value: "hackathon"
+    - name: CLIENT_ID
+      value: "20yupeh39V13Ch7CQsAG36ktDhtDN8jM"
+    - name: CLIENT_SECRET
+      value: "O8yqGigymc3W1Vc6"
+    - name: NODE_ENV
+      value: "development"
+    - name: MQTT_PORT
+      value: "10513"
+    - name: MQTT_USERNAME
+      value: "test"
+    - name: MQTT_PASSWORD
+      value: "test"
+    - name: DEBUG
+      value: "*"
