@@ -1,5 +1,4 @@
 //#include <TimedAction.h>
-#include <ArduinoJson.h>
 
 
 // IMPORTANT: Adafruit_TFTLCD LIBRARY MUST BE SPECIFICALLY
@@ -143,8 +142,6 @@ int acctNumber=0;
 char accountNames[5][10];
 char balances[5][5];
 char lastTra[5][10];
-
-StaticJsonBuffer<200> jsonBuffer;
 
                              
 void setup(void) {
@@ -315,8 +312,8 @@ void checkButton(void){
 
 void refresh(void){
   
-    //Ciao.write(CONNECTOR, TOPIC_UP, "{\"action\": \"refresh\", \"DEVICE\": \"AE3F5\"}");
-    Ciao.write(CONNECTOR, TOPIC_UP, "{fsfsdf}");
+    
+    Ciao.write(CONNECTOR, TOPIC_UP, "{\"action\": \"refresh\", \"DEVICE\": \"AE3F5\"}");
     delay(200); // wait for replay
     receiveAccts();
     
@@ -328,25 +325,21 @@ void refresh(void){
 
 void receiveAccts(void){
   CiaoData data = Ciao.read(CONNECTOR, TOPIC);
- 
+  for (int i=0; i<1000;i++){
     if (!data.isEmpty()){
         String message = data.get(2);
         Serial.println(message);
-        JsonObject& root = jsonBuffer.parseObject(message);
-        if (!root.success()) {
-          Serial.println("parseObject() failed");
-          return;
-         }
-         acctNumber= sizeof(root["account"])/sizeof(root["account"][0]);
-     
-         
+       updateInfo=1;
+         break;
 
          
      } else{
-    Serial.println("no update");
+   
+    delay(5);
    }
-  
+ }
 }
+
 
 
 
