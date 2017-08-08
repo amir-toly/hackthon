@@ -18,7 +18,8 @@ module.exports = {
         var state = req.query.state;
         console.log('code:' + code + ' state:' + state)
 
-        //MQT.startAndPush('First message to MQTT');
+//        var msg = '{   "accounts": [{     "name": "ABC",     "balance": "1035",     "last": "10 $ at toto"       },   {     "name": "acct 2",     "balance": "102",     "last": "24 $ at pizza"       }   ] }';
+//        MQT.startAndPush('/accounts/AE3F5', msg);
 
         getAccessToken(code, function(err, body) {
             console.log(body);

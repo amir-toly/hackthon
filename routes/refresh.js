@@ -12,10 +12,15 @@ var client_secret = process.env.CLIENT_SECRET;
 
 module.exports = {
 
-    handleRefresh: function(req, res) {
-        var app_key = req.query.appkey;
+//    handleRefresh: function(req, res) {
+      handleRefresh: function(app_key) {
+//        var app_key = req.query.appkey;
         console.log('app_key:' + app_key)
         var refresh_token;
+        var summary = '';
+        var j = 0;
+        var balances_ = [];
+        var transactions_ = [];
 
         Mop.findOne({ 'app_key': app_key }, 'app_key, refresh_token', function (err, mop) {
           if (err) {
@@ -33,44 +38,67 @@ module.exports = {
                           refresh_token: body.refresh_token}}, function(err, mop){
 
                               getAccounts(mop.access_token, function(err, body) {
+                                    var accounts_ = body;
+                                    var accountsLength = body.accounts.length;
 
                                   for(var i = 0; i < body.accounts.length; i++) {
-                                      var obj = body.accounts[i];
+                                    var obj = body.accounts[i];
 
-                                      console.log(obj.account_id);
+                                    console.log(obj.account_id);
 
                                     getBalances(obj.account_id, mop.access_token, function(err, body) {
 
-                                        MQT.startAndPush("/topic/balances", JSON.stringify(body));
-
+                                        //MQT.startAndPush("/topic/balances", JSON.stringify(body));
+                                        balances_.push(body);
                                         Mop.findOneAndUpdate({ app_key: app_key },
                                                         {$set: {balances: body}},
                                                     function(err, mop){
-                                                        if(err) res.render('error', { error: 'Error updating Mop'});
+                                                        if(err) console.log('Error updating Mop');
                                                 });
-                                    });
 
-                                    getTransactions(obj.account_id, mop.access_token, function(err, body) {
+                                        getTransactions(obj.account_id, mop.access_token, function(err, body) {
 
-                                        MQT.startAndPush("/topic/transactions", JSON.stringify(body));
+                                            //MQT.startAndPush("/topic/transactions", JSON.stringify(body));
+                                            transactions_.push(body);
+                                            j++;
 
-                                        Mop.findOneAndUpdate({ app_key: app_key },
-                                                        {$set: {transactions: body}},
-                                                    function(err, mop){
-                                                        if(err) res.render('error', { error: 'Error updating Mop'});
-                                                });
+                                            if (j == accountsLength) {
+                                                 for (var h = 0 ; h < accountsLength; h++) {
+//                                                    var k = {"name" : accounts_.accounts[h].product_name};
+//                                                    k.balance = balances_[h].balances[0].balance;
+//                                                    k.description = transactions_[h].transactions[0].description;
+
+                                                    var k = accounts_.accounts[h].product_name + "|"
+                                                    + balances_[h].balances[0].balance + '|' + transactions_[h].transactions[0].description;
+                                                    if (h == 0) {
+                                                        summary = k;
+                                                    } else {
+                                                        summary = summary + '|' + k;
+                                                    }
+                                              }
+                                              console.log("summary ");
+                                              console.log(summary);
+                                              MQT.startAndPush("/accounts/AE3F5", JSON.stringify(summary));
+                                            }
+
+                                            Mop.findOneAndUpdate({ app_key: app_key },
+                                                            {$set: {transactions: body}},
+                                                        function(err, mop){
+                                                            if(err) console.log('Error updating Mop');
+                                                    });
+                                        });
                                     });
 
                                   }
 
-                                  MQT.startAndPush("/topic/accounts", JSON.stringify(body));
+                                  //MQT.startAndPush("/topic/accounts", JSON.stringify(body));
                                   console.log('accounts are: ' + body)
 
                                   Mop.findOneAndUpdate({ app_key: app_key },
                                                   {$set: {accounts: body}},
                                               function(err, mop){
-                                                  if(err) res.render('error', { error: 'Error updating Mop'});
-                                                res.send(200);
+                                                  if(err) console.log('Error updating Mop');
+                                                //res.send(200);
                                           });
                               });
 
@@ -99,7 +127,8 @@ module.exports = {
 
             request(options, function(error, response, body) {
                 if (!error && response.statusCode == 200) {
-                    console.log("body: " + body);
+                    console.log("body: ");
+                    console.log(body);
                     return callback(null, body);
                 } else {
                     console.log("error::" + error);
@@ -109,6 +138,13 @@ module.exports = {
                 }
 
             })
+        }
+
+        function recursive( i, max )
+        {
+            if ( i > max ) return;
+            i = i + 1;
+            setTimeout( function(){ recursive(i, max); }, 2000 );
         }
 
 
@@ -131,7 +167,7 @@ module.exports = {
                     return callback(null, body);
                 } else {
                     console.log(error);
-                    console.log(response);
+                    console.log(body);
                     return callback(error, null)
                 }
 
@@ -150,14 +186,14 @@ module.exports = {
                 method: 'GET',
                 json: true
             };
-
+            recursive(1, 10);
             request(options, function(error, response, body) {
                 if (!error && response.statusCode == 200) {
                     console.log(body);
                     return callback(null, body);
                 } else {
                     console.log(error);
-                    console.log(response);
+                    console.log(body);
                     return callback(error, null)
                 }
 
@@ -176,14 +212,14 @@ module.exports = {
                 method: 'GET',
                 json: true
             };
-
+            recursive(1, 10);
             request(options, function(error, response, body) {
                 if (!error && response.statusCode == 200) {
                     console.log(body);
                     return callback(null, body);
                 } else {
                     console.log(error);
-                    console.log(response);
+                    console.log(body);
                     return callback(error, null)
                 }
 

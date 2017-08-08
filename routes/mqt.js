@@ -10,7 +10,8 @@ var options = {
     protocolId: 'MQIsdp',
     protocolVersion: 3,
     clean: true,
-    encoding: 'utf8'
+    encoding: 'utf8',
+    qos: 1
 };
 
 
@@ -22,10 +23,10 @@ module.exports = {
         client.on('connect', function() { // When connected
             console.log('connected');
             // subscribe to a topic
-//            client.subscribe('/topic/accounts', function() {
+//            client.subscribe('/refresh', function() {
 //                // when a message arrives, do something with it
 //                client.on('message', function(topic, message, packet) {
-//                    console.log("Acc. Received '" + message + "' on '" + topic + "'");
+//                    console.log("Message. Received '" + message + "' on refresh'");
 //                });
 //            });
 //
@@ -46,7 +47,7 @@ module.exports = {
 //            });
 
             // publish a message to a topic
-            client.publish(topic, message, function() {
+            client.publish(topic, message, 1, function() {
                 console.log("Message is published to:" + topic);
                 client.end(); // Close the connection when published
             });
