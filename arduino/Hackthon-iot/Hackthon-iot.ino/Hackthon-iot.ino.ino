@@ -45,24 +45,10 @@
 
 // Color definitions
 #define ILI9341_BLACK       0x0000      /*   0,   0,   0 */
-#define ILI9341_NAVY        0x000F      /*   0,   0, 128 */
+
 #define ILI9341_DARKGREEN   0x03E0      /*   0, 128,   0 */
-#define ILI9341_DARKCYAN    0x03EF      /*   0, 128, 128 */
-#define ILI9341_MAROON      0x7800      /* 128,   0,   0 */
-#define ILI9341_PURPLE      0x780F      /* 128,   0, 128 */
-#define ILI9341_OLIVE       0x7BE0      /* 128, 128,   0 */
-#define ILI9341_LIGHTGREY   0xC618      /* 192, 192, 192 */
-#define ILI9341_DARKGREY    0x7BEF      /* 128, 128, 128 */
-#define ILI9341_BLUE        0x001F      /*   0,   0, 255 */
-#define ILI9341_GREEN       0x07E0      /*   0, 255,   0 */
-#define ILI9341_CYAN        0x07FF      /*   0, 255, 255 */
 #define ILI9341_RED         0xF800      /* 255,   0,   0 */
-#define ILI9341_MAGENTA     0xF81F      /* 255,   0, 255 */
-#define ILI9341_YELLOW      0xFFE0      /* 255, 255,   0 */
 #define ILI9341_WHITE       0xFFFF      /* 255, 255, 255 */
-#define ILI9341_ORANGE      0xFD20      /* 255, 165,   0 */
-#define ILI9341_GREENYELLOW 0xAFE5      /* 173, 255,  47 */
-#define ILI9341_PINK        0xF81F
 
 /******************* UI details */
 #define BUTTON_X 40
@@ -139,9 +125,9 @@ int updateInfo=0;
 
 
 int acctNumber=0;
-char accountNames[5][10];
-char balances[5][5];
-char lastTra[5][10];
+char accountNames[5][20];
+char balances[5][10];
+char lastTra[5][20];
 
                              
 void setup(void) {
@@ -220,6 +206,11 @@ void keyDisplay() {
 
 void bankDisplay() {
   //set the display zone
+  char *val="mon account|123.45|Last transact";
+  parseAcctInfo(val);
+ 
+  
+  
   tft.setRotation(1);
   tft.setCursor(INFO_X, INFO_Y);
   tft.setTextColor(ILI9341_WHITE);
@@ -231,13 +222,13 @@ void bankDisplay() {
     tft.print("Please refresh");  
   }else{
     tft.print("Acct: ");
-    tft.println("hardcode");
+    tft.println(accountNames[0]);
     tft.setCursor(INFO_X, INFO_Y+30);
     tft.print("bal:");
-    tft.println("10");
+    tft.println(balances[0]);
     tft.setCursor(INFO_X, INFO_Y+60);
     tft.print("last:");
-    tft.println("hardcode");
+    tft.println(lastTra[0]);
    
   }
    tft.setRotation(0);
@@ -316,7 +307,12 @@ void refresh(void){
     Ciao.write(CONNECTOR, TOPIC_UP, "{\"action\": \"refresh\", \"DEVICE\": \"AE3F5\"}");
     delay(200); // wait for replay
     receiveAccts();
-    
+
+
+    //just for test
+
+
+    updateInfo=1;
     //screen set up
     
     createButton();
@@ -327,8 +323,9 @@ void receiveAccts(void){
   CiaoData data = Ciao.read(CONNECTOR, TOPIC);
   for (int i=0; i<1000;i++){
     if (!data.isEmpty()){
-        String message = data.get(2);
+        const char* message = data.get(2);
         Serial.println(message);
+        parseAcctInfo(message);
        updateInfo=1;
          break;
 
@@ -342,7 +339,40 @@ void receiveAccts(void){
 
 
 
+void parseAcctInfo(char *info){
+  //  account name|balance| last transaction
 
+// char accountNames[5][10];
+// char balances[5][5];
+// char lastTra[5][10];
+  char *token;
+  int j=0;
+  int k=0;
+  Serial.println("PARSING : ");
+   while ((token = strtok_r(info, "|", &info)) != NULL){
+      Serial.println("token: ");
+      Serial.println(token);
+      k=j % 3;
+      Serial.println("K :");
+      Serial.println(k);
+      int idx=(j-k)/3;
+      Serial.println("Index:");
+      Serial.println(idx);
+      if(k == 0){
+        strncpy(accountNames[idx],token, 20);
+      }
+      if(k== 1){
+        strncpy(balances[idx],token, 10);
+      }
+      if(k ==2){
+        strncpy(lastTra[idx],token, 20);
+      }
+      acctNumber=idx+1;
+      j++;
+      
+  }
+  
+}
 
 
 
