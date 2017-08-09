@@ -7,18 +7,15 @@
 
 
 #include <Adafruit_GFX.h>    // Core graphics library
-#include <Adafruit_TFTLCD.h> // Hardware-specific library
+//#include <Adafruit_TFTLCD.h> // Hardware-specific library
 #include <TouchScreen.h>
 
 // The control pins for the LCD can be assigned to any digital or
 // analog pins...but we'll use the analog pins as this allows us to
 // double up the pins with the touch screen (see the TFT paint example).
-#define LCD_CS A3 // Chip Select goes to Analog 3
-#define LCD_CD A2 // Command/Data goes to Analog 2
-#define LCD_WR A1 // LCD Write goes to Analog 1
-#define LCD_RD A0 // LCD Read goes to Analog 0
 
-#define LCD_RESET A4 // Can alternately just connect to Arduino's reset pin
+
+
 
 // When using the BREAKOUT BOARD only, use these 8 data lines to the LCD:
 // For the Arduino Uno, Duemilanove, Diecimila, etc.:
@@ -35,12 +32,7 @@
 
 // Assign human-readable names to some common 16-bit color values:
 #define  BLACK   0x0000
-#define BLUE    0x001F
-#define RED     0xF800
-#define GREEN   0x07E0
-#define CYAN    0x07FF
-#define MAGENTA 0xF81F
-#define YELLOW  0xFFE0
+
 #define WHITE   0xFFFF
 
 // Color definitions
@@ -65,13 +57,11 @@
 #define TEXT_W 220
 #define TEXT_H 240
 #define TEXT_TSIZE 3
-#define TEXT_TCOLOR ILI9341_MAGENTA
+
 #define TEXTPOS_X 10
 #define TEXTPOS_Y 75
 // the data (phone #) we store in the textfield
-#define TEXT_LEN 12
-char textfield[TEXT_LEN+1] = "";
-uint8_t textfield_i=0;
+
 
 #define YP A3  // must be an analog pin, use "An" notation!
 #define XM A2  // must be an analog pin, use "An" notation!
@@ -87,9 +77,6 @@ uint8_t textfield_i=0;
 
 #define TS_MINY 70
 #define TS_MAXY 900
-// We have a status line for like, is FONA working
-#define STATUS_X 10
-#define STATUS_Y 65
 
 // We have a status line for like, is FONA working
 #define KEY_X 100
@@ -106,42 +93,28 @@ uint8_t textfield_i=0;
 #define TOPIC_UP "/refresh"
 #define TOPIC "/accounts/AE3F5"
 #define DEVICE_ID "AE3F5"
-
+#define RFRSH  "{\"action\": \"refresh\", \"DEVICE\": \"AE3F5\"}"
 #include <MCUFRIEND_kbv.h>
 MCUFRIEND_kbv tft;
 TouchScreen ts = TouchScreen(XP, YP, XM, YM, 300);
-// If using the shield, all control and data lines are fixed, and
-// a simpler declaration can optionally be used:
-// Adafruit_TFTLCD tft;
 
 Adafruit_GFX_Button buttons[2];
-/* create 15 buttons, in classic candybar phone style */
-char buttonlabels[2][5] = {"Key", "UPD." };
-uint16_t buttoncolors[2] = { ILI9341_RED,ILI9341_DARKGREEN};
+char buttonlabels[2][4] = {"Key", "UPD."};
+const uint16_t buttoncolors[2] = { ILI9341_RED,ILI9341_DARKGREEN};
 
+byte updateInfo=0;
 
-
-int updateInfo=0;
-
-
-int acctNumber=0;
-char accountNames[5][20];
-char balances[5][10];
-char lastTra[5][20];
+byte acctNumber=0;
+char accountNames[2][15];
+char balances[2][8];
+char lastTra[2][15];
 
                              
 void setup(void) {
   Ciao.begin();
   Serial.begin(9600);
-  Serial.println(F("TFT LCD test"));
-  Serial.print("TFT size is "); Serial.print(tft.width()); Serial.print("x"); Serial.println(tft.height());
-
   tft.reset();
-  uint16_t identifier = 0x9341;
-  tft.begin(identifier);
   createButton();
-
-  
 
 }
 void loop(void) {
@@ -149,7 +122,7 @@ void loop(void) {
  checkButton();
  
  if(updateInfo ==1){
-   Serial.println("updateInfo");
+
    bankDisplay();
    updateInfo =0;
  }
@@ -165,69 +138,56 @@ void createButton(void){
 
   buttons[0].initButton(&tft,40, 
                 40,    // x, y, w, h, outline, fill, text
-                  BUTTON_W, BUTTON_H, ILI9341_WHITE, buttoncolors[0], ILI9341_WHITE,
+                  BUTTON_W, BUTTON_H, WHITE, buttoncolors[0], WHITE,
                   buttonlabels[0], BUTTON_TEXTSIZE);
   buttons[0].drawButton(); 
   buttons[1].initButton(&tft,160, 
                  40,    // x, y, w, h, outline, fill, text
-                  120,BUTTON_H, ILI9341_WHITE, buttoncolors[1], ILI9341_WHITE,
+                  120,BUTTON_H, ILI9341_WHITE, buttoncolors[1], WHITE,
                  buttonlabels[1], BUTTON_TEXTSIZE); 
   buttons[1].drawButton();
 
   
   // create 'text field'
- tft.drawRect(TEXT_X, TEXT_Y, TEXT_W, TEXT_H, ILI9341_WHITE);
+ tft.drawRect(TEXT_X, TEXT_Y, TEXT_W, TEXT_H, WHITE);
  delay(200);
  }
 
-// or charstring
-void status(char *msg) {
-  tft.fillRect(STATUS_X, STATUS_Y, 240, 8, ILI9341_BLACK);
-  tft.setCursor(STATUS_X, STATUS_Y);
-  tft.setTextColor(ILI9341_WHITE);
-  tft.setTextSize(1);
-  tft.print(msg);
-}
+
 
 void keyDisplay() {
   tft.setRotation(1);
-  tft.fillRect(INFO_X, INFO_Y, 220, 190, ILI9341_BLACK);
-  //tft.fillRect(KEY_X, KEY_Y, 240, 8, ILI9341_BLACK);
+  tft.fillRect(INFO_X, INFO_Y, 220, 190, BLACK);
   tft.setCursor(KEY_X, KEY_Y);
-  tft.setTextColor(ILI9341_WHITE);
+  tft.setTextColor(WHITE);
   tft.setTextSize(3);
   tft.print(DEVICE_ID);
-  Serial.println("key printed");
-  Serial.println(DEVICE_ID);
+
   delay(3000);
-  tft.fillRect(INFO_X, INFO_Y, 190, 190, ILI9341_BLACK);
+  tft.fillRect(INFO_X, INFO_Y, 190, 190, BLACK);
   tft.setRotation(0);
 }
 
 void bankDisplay() {
   //set the display zone
-  char *val="mon account|123.45|Last transact";
-  parseAcctInfo(val);
- 
-  
-  
+
   tft.setRotation(1);
   tft.setCursor(INFO_X, INFO_Y);
   tft.setTextColor(ILI9341_WHITE);
   tft.setTextSize(2);
   tft.setCursor(INFO_X, INFO_Y);
   if (acctNumber==0){
-    tft.println("Nothing to display");
+    tft.println(F("Nothing to display"));
     tft.setCursor(INFO_X, INFO_Y+30);
-    tft.print("Please refresh");  
+    tft.print(F("Please refresh"));  
   }else{
-    tft.print("Acct: ");
+    tft.print(F("Acct: "));
     tft.println(accountNames[0]);
     tft.setCursor(INFO_X, INFO_Y+30);
-    tft.print("bal:");
+    tft.print(F("bal:"));
     tft.println(balances[0]);
     tft.setCursor(INFO_X, INFO_Y+60);
-    tft.print("last:");
+    tft.print(F("last:"));
     tft.println(lastTra[0]);
    
   }
@@ -237,9 +197,7 @@ void bankDisplay() {
 
   
 void checkButton(void){
-  /*TSPoint p;
-  p = ts.getPoint(); 
-  */
+
   digitalWrite(13, HIGH);
   TSPoint p = ts.getPoint();
   digitalWrite(13, LOW);
@@ -277,23 +235,18 @@ void checkButton(void){
   
       // key button
         if (b == 0) {
-          status("Key");
-          //fona.hangUp();
+
           keyDisplay();
           
         }
         
         // refresh
         if (b == 1) {
-
-          Serial.print("refreshing ");
-      Serial.print(textfield);
+   
         refresh();
-          //fona.callPhone(textfield);
         }
         updateInfo=1;
-     
-          status('\0');
+   
    
     }
 
@@ -301,39 +254,26 @@ void checkButton(void){
 
 }
 
-void refresh(void){
-  
-    
-    Ciao.write(CONNECTOR, TOPIC_UP, "{\"action\": \"refresh\", \"DEVICE\": \"AE3F5\"}");
-    delay(200); // wait for replay
+void refresh(void){  
+    Ciao.write(CONNECTOR, TOPIC_UP,RFRSH );
+    delay(500); // wait for replay
     receiveAccts();
-
-
-    //just for test
-
-
     updateInfo=1;
-    //screen set up
-    
     createButton();
- 
 }
 
 void receiveAccts(void){
-  CiaoData data = Ciao.read(CONNECTOR, TOPIC);
-  for (int i=0; i<1000;i++){
+  CiaoData data; 
+  for (uint8_t i=0; i<500;i++){
+    data = Ciao.read(CONNECTOR, TOPIC);
     if (!data.isEmpty()){
-        const char* message = data.get(2);
-        Serial.println(message);
+       const char *message = data.get(2);
+        Serial.println(F("got it"));
         parseAcctInfo(message);
-       updateInfo=1;
-         break;
-
-         
-     } else{
-   
-    delay(5);
-   }
+        updateInfo=1;
+        break;
+     } 
+     delay(10);
  }
 }
 
@@ -342,30 +282,22 @@ void receiveAccts(void){
 void parseAcctInfo(char *info){
   //  account name|balance| last transaction
 
-// char accountNames[5][10];
-// char balances[5][5];
-// char lastTra[5][10];
   char *token;
-  int j=0;
-  int k=0;
-  Serial.println("PARSING : ");
+  uint8_t j=0;
+  uint8_t k=0;
    while ((token = strtok_r(info, "|", &info)) != NULL){
-      Serial.println("token: ");
-      Serial.println(token);
       k=j % 3;
-      Serial.println("K :");
       Serial.println(k);
-      int idx=(j-k)/3;
-      Serial.println("Index:");
+      uint8_t idx=(j-k)/3;
       Serial.println(idx);
       if(k == 0){
-        strncpy(accountNames[idx],token, 20);
+        strncpy(accountNames[idx],token, 15);
       }
       if(k== 1){
-        strncpy(balances[idx],token, 10);
+        strncpy(balances[idx],token, 5);
       }
       if(k ==2){
-        strncpy(lastTra[idx],token, 20);
+        strncpy(lastTra[idx],token, 15);
       }
       acctNumber=idx+1;
       j++;
@@ -373,9 +305,3 @@ void parseAcctInfo(char *info){
   }
   
 }
-
-
-
-
-
-
