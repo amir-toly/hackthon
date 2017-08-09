@@ -55,6 +55,10 @@ app.use(function(req, res, next) {
     next(err);
 });
 
+
+var mqtListen = require('./routes/listen');
+mqtListen.keepListening();
+
 // development error handler
 // will print stacktrace
 if (app.get('env') === 'development') {

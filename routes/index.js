@@ -49,7 +49,7 @@ module.exports = function(passport){
 
 	/* Mop Callback*/
 	router.get('/callback', Mop.handleCallback)
-    router.get('/refresh-all', Refresh.handleRefresh)
+    //router.get('/refresh-all', Refresh.handleRefresh)
 
 	/* GET apps Page */
 	router.get('/applications', isAuthenticated,Apps.all);
