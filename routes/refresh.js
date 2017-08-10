@@ -21,6 +21,7 @@ module.exports = {
         var j = 0;
         var balances_ = [];
         var transactions_ = [];
+        var traList = [];
 
         Mop.findOne({ 'app_key': app_key }, 'app_key, refresh_token', function (err, mop) {
           if (err) {
@@ -60,10 +61,19 @@ module.exports = {
 
                                             //MQT.startAndPush("/topic/transactions", JSON.stringify(body));
                                             transactions_.push(body);
+
+                                            body.transactions.forEach(function(element) {
+                                               traList.push(element);
+                                            });
+
                                             j++;
 
+
+                                            //function call here
+
+
                                             if (j == accountsLength) {
-                                                 for (var h = 0 ; h < accountsLength; h++) {
+    /*                                             for (var h = 0 ; h < accountsLength; h++) {
 //                                                    var k = {"name" : accounts_.accounts[h].product_name};
 //                                                    k.balance = balances_[h].balances[0].balance;
 //                                                    k.description = transactions_[h].transactions[0].description;
@@ -78,7 +88,8 @@ module.exports = {
                                               }
                                               console.log("summary ");
                                               console.log(summary);
-                                              MQT.startAndPush("/accounts/AE3F5", JSON.stringify(summary));
+    */                                          var mqqtMessage=formatMsg(accounts_,balances_,traList);
+                                                MQT.startAndPush("/accounts/AE3F5", mqqtMessage);
                                             }
 
                                             Mop.findOneAndUpdate({ app_key: app_key },
@@ -144,7 +155,7 @@ module.exports = {
         {
             if ( i > max ) return;
             i = i + 1;
-            setTimeout( function(){ recursive(i, max); }, 2000 );
+            setTimeout( function(){ recursive(i, max); }, 200 );
         }
 
 
@@ -172,6 +183,29 @@ module.exports = {
                 }
 
             })
+        }
+
+        function formatMsg(accounts, balances, transactions) {
+            // numberof Acct|sum of bal|lastTrx of all|category
+            var numbOfAccounts=accounts.length();
+            var total=balances.reduce(getTotal,0);
+            //sort all transactions
+
+            transactions.sort(function(a, b){
+                var keyA = new Date(a.transaction_date),
+                    keyB = new Date(b.transaction_date);
+                // Compare the 2 dates
+                if(keyA < keyB) return -1;
+                if(keyA > keyB) return 1;
+                return 0;
+            });
+            return numbOfAccounts+"|"+total+"|"+transactions[0].amount+"|"+transactions[0].category;
+
+
+        }
+
+        function getTotal(total, num) {
+            return total + num;
         }
 
         function getTransactions(accountId, access_token, callback) {

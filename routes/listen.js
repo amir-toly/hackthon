@@ -26,10 +26,9 @@ module.exports = {
             // subscribe to a topic
             client.subscribe('/refresh', function() {
                 // when a message arrives, do something with it
-                client.on('message', function(topic, message, packet) {
-                    console.log("Message. Received '" + message + "' on refresh'");
-                    var obj = JSON.parse(message);
-                    Refresh.handleRefresh(obj.DEVICE);
+                client.on('message', function(topic, deviceId, packet) {
+                    console.log("Message. Received '" + deviceId + "' on refresh'");
+                    Refresh.handleRefresh(deviceId);
                 });
             });
         });
