@@ -68,7 +68,6 @@ module.exports = {
 
                                             j++;
 
-
                                             //function call here
 
 
@@ -88,7 +87,7 @@ module.exports = {
                                               }
                                               console.log("summary ");
                                               console.log(summary);
-    */                                          var mqqtMessage=formatMsg(accounts_,balances_,traList);
+    */                                          var mqqtMessage=formatMsg(accountsLength,balances_,traList);
                                                 MQT.startAndPush("/accounts/AE3F5", mqqtMessage);
                                             }
 
@@ -185,9 +184,9 @@ module.exports = {
             })
         }
 
-        function formatMsg(accounts, balances, transactions) {
+        function formatMsg(numAcct, balances, transactions) {
             // numberof Acct|sum of bal|lastTrx of all|category
-            var numbOfAccounts=accounts.length();
+
             var total=balances.reduce(getTotal,0);
             //sort all transactions
 
@@ -199,7 +198,7 @@ module.exports = {
                 if(keyA > keyB) return 1;
                 return 0;
             });
-            return numbOfAccounts+"|"+total+"|"+transactions[0].amount+"|"+transactions[0].category;
+            return numAcct+"|"+total+"|"+transactions[0].amount+"|"+transactions[0].category;
 
 
         }
