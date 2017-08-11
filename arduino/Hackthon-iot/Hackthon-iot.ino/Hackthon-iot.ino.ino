@@ -210,7 +210,9 @@ void bankDisplay() {
       tft.setTextColor(WHITE);
       tft.setTextSize(2);
       tft.print(F("Across:"));
+      tft.setTextColor(BLUE);
       tft.print(acctNum);
+      tft.setTextColor(WHITE);
       tft.println(F(" accounts"));
       
     }
