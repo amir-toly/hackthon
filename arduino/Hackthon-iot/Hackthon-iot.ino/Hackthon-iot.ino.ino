@@ -91,7 +91,7 @@
 
 #define CONNECTOR "mqtt"
 #define TOPIC_UP "/refresh"
-#define TOPIC "/accounts/AE3F5"
+#define TOPIC "/accounts/AE3D5"
 #define DEVICE_ID "AE3D5"
 #include <MCUFRIEND_kbv.h>
 MCUFRIEND_kbv tft;
@@ -102,11 +102,12 @@ char buttonlabels[2][4] = {"Key", "UPD."};
 const uint16_t buttoncolors[2] = { ILI9341_RED,ILI9341_DARKGREEN};
 
 byte updateInfo=0;
-
-byte acctNumber=0;
-char accountNames[2][15];
-char balances[2][8];
-char lastTra[2][15];
+byte dataRfrsh =0;
+byte pannel=1;
+char acctNum[2];
+char balance[10];
+char lastAmount[10];
+char lastCat[20];
 
                              
 void setup(void) {
@@ -175,20 +176,36 @@ void bankDisplay() {
   tft.setTextColor(ILI9341_WHITE);
   tft.setTextSize(2);
   tft.setCursor(INFO_X, INFO_Y);
-  if (acctNumber==0){
+  if (dataRfrsh==0){
     tft.println(F("Nothing to display"));
     tft.setCursor(INFO_X, INFO_Y+30);
     tft.print(F("Please refresh"));  
   }else{
-    tft.print(F("Acct: "));
-    tft.println(accountNames[0]);
-    tft.setCursor(INFO_X, INFO_Y+30);
-    tft.print(F("bal:"));
-    tft.println(balances[0]);
-    tft.setCursor(INFO_X, INFO_Y+60);
-    tft.print(F("last:"));
-    tft.println(lastTra[0]);
-   
+    if(pannel==1){
+    
+      tft.print(F("You Have: "));
+      tft.setCursor(INFO_X, INFO_Y+60);
+      tft.setTextSize(3);
+      tft.println(balance);
+      tft.setCursor(INFO_X, INFO_Y+90);
+      tft.setTextSize(2);
+      tft.print(F("Across:"));
+      tft.println(acctNum);
+      tft.println(F(" accounts"));
+      
+    }
+    if(pannel==2){
+      
+      tft.print(F("last transaction of"));
+      tft.setCursor(INFO_X, INFO_Y+60);
+      tft.setTextSize(3);
+      tft.println(lastAmount);
+      tft.setCursor(INFO_X, INFO_Y+90);
+      tft.setTextSize(2);
+      tft.print(F("In:"));
+      tft.println(acctNum);
+      
+    }
   }
    tft.setRotation(0);
 }
@@ -255,7 +272,7 @@ void checkButton(void){
 
 void refresh(void){  
     Ciao.write(CONNECTOR, TOPIC_UP, DEVICE_ID );
-    delay(500); // wait for replay
+    delay(300); // wait for replay
     receiveAccts();
     Serial.print(F("done with rec"));
     updateInfo=1;
@@ -264,12 +281,14 @@ void refresh(void){
 
 void receiveAccts(void){
   CiaoData data; 
-  for (uint8_t i=0; i<500;i++){
+  for (uint8_t i=0; i<300;i++){
     data = Ciao.read(CONNECTOR, TOPIC);
     if (!data.isEmpty()){
        const char *message = data.get(2);
-        Serial.println(F("got it"));
+        Serial.println(F("got it in"));
+        Serial.println(i);
         parseAcctInfo(message);
+        dataRfrsh=1;
         updateInfo=1;
         break;
      } 
@@ -283,24 +302,24 @@ void parseAcctInfo(char *info){
   //  account name|balance| last transaction
 
   char *token;
-  uint8_t j=0;
   uint8_t k=0;
+ 
    while ((token = strtok_r(info, "|", &info)) != NULL){
-      k=j % 3;
-
-      uint8_t idx=(j-k)/3;
-      Serial.println(idx);
+      
       if(k == 0){
-        strncpy(accountNames[idx],token, 15);
+        strncpy(acctNum,token, 2);
       }
       if(k== 1){
-        strncpy(balances[idx],token, 5);
+        strncpy(balance,token, 10);
       }
       if(k ==2){
-        strncpy(lastTra[idx],token, 15);
+        strncpy(lastAmount,token, 10);
       }
-      acctNumber=idx+1;
-      j++;
+      if(k ==3){
+        strncpy(lastCat,token, 20);
+      }
+    
+      k++;
       
   }
   

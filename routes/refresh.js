@@ -22,6 +22,8 @@ module.exports = {
         var balances_ = [];
         var transactions_ = [];
         var traList = [];
+        var balList = [];
+
 
         Mop.findOne({ 'app_key': app_key }, 'app_key, refresh_token', function (err, mop) {
           if (err) {
@@ -51,6 +53,7 @@ module.exports = {
 
                                         //MQT.startAndPush("/topic/balances", JSON.stringify(body));
                                         balances_.push(body);
+                                        balList.push(body.balances[0].balance)
                                         Mop.findOneAndUpdate({ app_key: app_key },
                                                         {$set: {balances: body}},
                                                     function(err, mop){
@@ -87,7 +90,7 @@ module.exports = {
                                               }
                                               console.log("summary ");
                                               console.log(summary);
-    */                                          var mqqtMessage=formatMsg(accountsLength,balances_,traList);
+    */                                          var mqqtMessage=formatMsg(accountsLength,balList,traList);
                                                 MQT.startAndPush("/accounts/"+app_key, mqqtMessage);
                                             }
 
