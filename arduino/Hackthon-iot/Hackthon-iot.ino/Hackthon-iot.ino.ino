@@ -84,7 +84,7 @@
 
 // We have a status line for like, is FONA working
 #define INFO_X 90
-#define INFO_Y 20
+#define INFO_Y 30
 
 //#include <Wire.h>
 #include <UnoWiFiDevEd.h>
@@ -132,8 +132,7 @@ void loop(void) {
 void createButton(void){
   uint16_t identifier=0x9341;  
   tft.begin(identifier);
-
-  tft.setRotation(0);
+  tft.setRotation(2);
   tft.fillScreen(BLACK);
 
   buttons[0].initButton(&tft,40, 
@@ -156,7 +155,7 @@ void createButton(void){
 
 
 void keyDisplay() {
-  tft.setRotation(1);
+  tft.setRotation(3);
   tft.fillRect(INFO_X, INFO_Y, 220, 190, BLACK);
   tft.setCursor(KEY_X, KEY_Y);
   tft.setTextColor(WHITE);
@@ -165,13 +164,13 @@ void keyDisplay() {
 
   delay(3000);
   tft.fillRect(INFO_X, INFO_Y, 190, 190, BLACK);
-  tft.setRotation(0);
+  tft.setRotation(2);
 }
 
 void bankDisplay() {
   //set the display zone
 
-  tft.setRotation(1);
+  tft.setRotation(3);
   tft.setCursor(INFO_X, INFO_Y);
   tft.setTextColor(ILI9341_WHITE);
   tft.setTextSize(2);
@@ -187,10 +186,10 @@ void bankDisplay() {
       tft.setCursor(INFO_X, INFO_Y+60);
       tft.setTextSize(3);
       tft.println(balance);
-      tft.setCursor(INFO_X, INFO_Y+90);
+      tft.setCursor(INFO_X, INFO_Y+120);
       tft.setTextSize(2);
       tft.print(F("Across:"));
-      tft.println(acctNum);
+      tft.print(acctNum);
       tft.println(F(" accounts"));
       
     }
@@ -207,7 +206,7 @@ void bankDisplay() {
       
     }
   }
-   tft.setRotation(0);
+   tft.setRotation(2);
 }
 
 
@@ -222,12 +221,34 @@ void checkButton(void){
   //pinMode(XP, OUTPUT);
   pinMode(XM, OUTPUT);
   pinMode(YP, OUTPUT);
-
+  byte rotation =2;
    if (p.z > MINPRESSURE && p.z < MAXPRESSURE) {
     // scale from 0->1023 to tft.width
     p.x = map(p.x, TS_MINX, TS_MAXX, tft.width(), 0);
     p.y = (tft.height()-map(p.y, TS_MINY, TS_MAXY, tft.height(), 0));
    }
+    if (rotation == 2) 
+    {
+      p.x = 240 - p.x;
+      p.y = 320 - p.y;
+    }
+    else if (rotation == 1) 
+    {
+      //  p.y reversed
+      p.x = 320 - p.y;
+      p.y = p.x;
+    }
+    else if (rotation == 0) 
+    {
+      p.x = p.x;
+      p.y = p.y;
+    }
+    else if (rotation == 3) 
+    {
+      //  p.x, p.y reversed
+      p.x = p.y;
+      p.y = 240 - p.x;
+    }
    
   // go thru all the buttons, checking if they were pressed
   for (uint8_t b=0; b<2; b++) {
