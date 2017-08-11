@@ -1,4 +1,4 @@
-//#include <TimedAction.h>
+#include <TimedAction.h>
 
 
 // IMPORTANT: Adafruit_TFTLCD LIBRARY MUST BE SPECIFICALLY
@@ -32,9 +32,9 @@
 
 // Assign human-readable names to some common 16-bit color values:
 #define  BLACK   0x0000
-
+#define YELLOW  0xFFE0
 #define WHITE   0xFFFF
-
+#define  BLUE    0x001F
 // Color definitions
 #define ILI9341_BLACK       0x0000      /*   0,   0,   0 */
 
@@ -102,14 +102,24 @@ char buttonlabels[2][4] = {"Key", "UPD."};
 const uint16_t buttoncolors[2] = { ILI9341_RED,ILI9341_DARKGREEN};
 
 byte updateInfo=0;
-byte dataRfrsh =0;
+byte dataRfrsh=0;
 byte pannel=1;
+byte pchanged=0;
 char acctNum[2];
 char balance[10];
 char lastAmount[10];
 char lastCat[20];
 
-                             
+void rotate(void){
+  Serial.println(F("rotate"));
+  if (pannel==1){
+    pannel=2;
+  }else{
+    pannel=1;
+  }
+  pchanged=1;
+}
+TimedAction rotatePanel = TimedAction(5000,rotate);
 void setup(void) {
   Ciao.begin();
   Serial.begin(9600);
@@ -120,14 +130,15 @@ void setup(void) {
 void loop(void) {
 
  checkButton();
- 
+ rotatePanel.check();
  if(updateInfo ==1){
-
-   bankDisplay();
+  pannel=1;
+   
    updateInfo =0;
  }
- 
+ bankDisplay();
 }
+
 
 void createButton(void){
   uint16_t identifier=0x9341;  
@@ -180,13 +191,23 @@ void bankDisplay() {
     tft.setCursor(INFO_X, INFO_Y+30);
     tft.print(F("Please refresh"));  
   }else{
-    if(pannel==1){
+
+    if(pchanged==1){
+    tft.fillRect(INFO_X, INFO_Y, 220, 190, BLACK);
+      pchanged=0;
+    }
     
+    if(pannel==1){
+      tft.setTextSize(2);
       tft.print(F("You Have: "));
       tft.setCursor(INFO_X, INFO_Y+60);
+      tft.setTextColor(BLUE);
       tft.setTextSize(3);
-      tft.println(balance);
+      tft.print(balance);
+      tft.setTextColor(YELLOW);
+      tft.print(F("$"));
       tft.setCursor(INFO_X, INFO_Y+120);
+      tft.setTextColor(WHITE);
       tft.setTextSize(2);
       tft.print(F("Across:"));
       tft.print(acctNum);
@@ -194,15 +215,23 @@ void bankDisplay() {
       
     }
     if(pannel==2){
-      
-      tft.print(F("last transaction of"));
-      tft.setCursor(INFO_X, INFO_Y+60);
-      tft.setTextSize(3);
-      tft.println(lastAmount);
-      tft.setCursor(INFO_X, INFO_Y+90);
       tft.setTextSize(2);
-      tft.print(F("In:"));
-      tft.println(acctNum);
+      tft.println(F("Last transaction:"));
+      tft.setCursor(INFO_X, INFO_Y+60);
+      tft.setTextColor(BLUE);
+      tft.setTextSize(3);
+      tft.print(lastAmount);
+      tft.setTextColor(YELLOW);
+      tft.print(F("$"));
+      tft.setCursor(INFO_X, INFO_Y+120);
+      tft.setTextSize(2);
+      tft.setTextColor(WHITE);
+      tft.print(F("Category:"));
+      tft.setCursor(INFO_X, INFO_Y+150);
+      tft.setTextColor(BLUE);
+      tft.setTextSize(1);
+      tft.println(lastCat);
+      tft.setTextColor(WHITE);
       
     }
   }
