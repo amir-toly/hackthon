@@ -92,8 +92,7 @@
 #define CONNECTOR "mqtt"
 #define TOPIC_UP "/refresh"
 #define TOPIC "/accounts/AE3F5"
-#define DEVICE_ID "AE3F5"
-#define RFRSH  "{\"action\": \"refresh\", \"DEVICE\": \"AE3F5\"}"
+#define DEVICE_ID "AE3D5"
 #include <MCUFRIEND_kbv.h>
 MCUFRIEND_kbv tft;
 TouchScreen ts = TouchScreen(XP, YP, XM, YM, 300);
@@ -255,9 +254,10 @@ void checkButton(void){
 }
 
 void refresh(void){  
-    Ciao.write(CONNECTOR, TOPIC_UP,RFRSH );
+    Ciao.write(CONNECTOR, TOPIC_UP, DEVICE_ID );
     delay(500); // wait for replay
     receiveAccts();
+    Serial.print(F("done with rec"));
     updateInfo=1;
     createButton();
 }
@@ -287,7 +287,7 @@ void parseAcctInfo(char *info){
   uint8_t k=0;
    while ((token = strtok_r(info, "|", &info)) != NULL){
       k=j % 3;
-      Serial.println(k);
+
       uint8_t idx=(j-k)/3;
       Serial.println(idx);
       if(k == 0){
