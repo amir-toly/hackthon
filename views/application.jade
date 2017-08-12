@@ -4,9 +4,9 @@
 extends layout
 
 block content
-    h1.text-center Application: #{oneapp.name}
+    h1.page-title Application: #{oneapp.name}
     form(method='post', action='/applications/edit/#{oneapp._id}')
-        div.container
+        div.signup-wall
             div.row.space
                 div.col-md-2.col-md-offset-4
                     label(for='name') Name:

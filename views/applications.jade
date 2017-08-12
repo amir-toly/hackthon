@@ -12,15 +12,16 @@ block content
 
 
     form(method='post', action='/applications/create')
-        div
-            label(for='name') Name:
-            input.form-control(type='text', placeholder='app name', name='name',required)
-        div
-            label(for='description') Description:
-            input.form-control(type='text', placeholder='description', name='description',required)
-        div
-            label(for='app key') App Key:
-            input.form-control(type='text', placeholder='app key', name='app_key',required)
-        div.row.space
-            button.btn.btn-primary(type='submit', value='Add app') Create your App
-            a(href='/home').btn.btn-default.btn Back
+        div.signup-wall
+            div
+                label(for='name') Name:
+                input.form-control(type='text', placeholder='app name', name='name',required)
+            div
+                label(for='description') Description:
+                input.form-control(type='text', placeholder='description', name='description',required)
+            div
+                label(for='app key') App Key:
+                input.form-control(type='text', placeholder='app key', name='app_key',required)
+            div.row.space
+                button.btn.btn-primary(type='submit', value='Add app') Create your App
+                a(href='/home').btn.btn-default.btn Back

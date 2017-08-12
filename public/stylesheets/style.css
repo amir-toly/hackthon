@@ -7,7 +7,12 @@ body {
 a {
   color: #00B7FF;
 }
-
+.page-titleage-title{
+    color: #000000;
+    font-size: 25px;
+    font-weight: 800;
+    display: block;
+}
 .form-signin{
     max-width: 330px;
     padding: 15px;
