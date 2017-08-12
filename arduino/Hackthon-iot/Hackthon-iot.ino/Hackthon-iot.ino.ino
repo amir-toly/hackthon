@@ -1,4 +1,4 @@
-//#include <TimedAction.h>
+#include <TimedAction.h>
 
 
 // IMPORTANT: Adafruit_TFTLCD LIBRARY MUST BE SPECIFICALLY
@@ -32,9 +32,9 @@
 
 // Assign human-readable names to some common 16-bit color values:
 #define  BLACK   0x0000
-
+#define YELLOW  0xFFE0
 #define WHITE   0xFFFF
-
+#define  BLUE    0x001F
 // Color definitions
 #define ILI9341_BLACK       0x0000      /*   0,   0,   0 */
 
@@ -84,16 +84,15 @@
 
 // We have a status line for like, is FONA working
 #define INFO_X 90
-#define INFO_Y 20
+#define INFO_Y 30
 
 //#include <Wire.h>
 #include <UnoWiFiDevEd.h>
 
 #define CONNECTOR "mqtt"
 #define TOPIC_UP "/refresh"
-#define TOPIC "/accounts/AE3F5"
-#define DEVICE_ID "AE3F5"
-#define RFRSH  "{\"action\": \"refresh\", \"DEVICE\": \"AE3F5\"}"
+#define TOPIC "/accounts/AE3D5"
+#define DEVICE_ID "AE3D5"
 #include <MCUFRIEND_kbv.h>
 MCUFRIEND_kbv tft;
 TouchScreen ts = TouchScreen(XP, YP, XM, YM, 300);
@@ -103,13 +102,24 @@ char buttonlabels[2][4] = {"Key", "UPD."};
 const uint16_t buttoncolors[2] = { ILI9341_RED,ILI9341_DARKGREEN};
 
 byte updateInfo=0;
+byte dataRfrsh=0;
+byte pannel=1;
+byte pchanged=0;
+char acctNum[2];
+char balance[10];
+char lastAmount[10];
+char lastCat[20];
 
-byte acctNumber=0;
-char accountNames[2][15];
-char balances[2][8];
-char lastTra[2][15];
-
-                             
+void rotate(void){
+  Serial.println(F("rotate"));
+  if (pannel==1){
+    pannel=2;
+  }else{
+    pannel=1;
+  }
+  pchanged=1;
+}
+TimedAction rotatePanel = TimedAction(5000,rotate);
 void setup(void) {
   Ciao.begin();
   Serial.begin(9600);
@@ -120,20 +130,20 @@ void setup(void) {
 void loop(void) {
 
  checkButton();
- 
+ rotatePanel.check();
  if(updateInfo ==1){
-
-   bankDisplay();
+  pannel=1;
+   
    updateInfo =0;
  }
- 
+ bankDisplay();
 }
+
 
 void createButton(void){
   uint16_t identifier=0x9341;  
   tft.begin(identifier);
-
-  tft.setRotation(0);
+  tft.setRotation(2);
   tft.fillScreen(BLACK);
 
   buttons[0].initButton(&tft,40, 
@@ -156,7 +166,7 @@ void createButton(void){
 
 
 void keyDisplay() {
-  tft.setRotation(1);
+  tft.setRotation(3);
   tft.fillRect(INFO_X, INFO_Y, 220, 190, BLACK);
   tft.setCursor(KEY_X, KEY_Y);
   tft.setTextColor(WHITE);
@@ -165,33 +175,69 @@ void keyDisplay() {
 
   delay(3000);
   tft.fillRect(INFO_X, INFO_Y, 190, 190, BLACK);
-  tft.setRotation(0);
+  tft.setRotation(2);
 }
 
 void bankDisplay() {
   //set the display zone
 
-  tft.setRotation(1);
+  tft.setRotation(3);
   tft.setCursor(INFO_X, INFO_Y);
   tft.setTextColor(ILI9341_WHITE);
   tft.setTextSize(2);
   tft.setCursor(INFO_X, INFO_Y);
-  if (acctNumber==0){
+  if (dataRfrsh==0){
     tft.println(F("Nothing to display"));
     tft.setCursor(INFO_X, INFO_Y+30);
     tft.print(F("Please refresh"));  
   }else{
-    tft.print(F("Acct: "));
-    tft.println(accountNames[0]);
-    tft.setCursor(INFO_X, INFO_Y+30);
-    tft.print(F("bal:"));
-    tft.println(balances[0]);
-    tft.setCursor(INFO_X, INFO_Y+60);
-    tft.print(F("last:"));
-    tft.println(lastTra[0]);
-   
+
+    if(pchanged==1){
+    tft.fillRect(INFO_X, INFO_Y, 220, 190, BLACK);
+      pchanged=0;
+    }
+    
+    if(pannel==1){
+      tft.setTextSize(2);
+      tft.print(F("You Have: "));
+      tft.setCursor(INFO_X, INFO_Y+60);
+      tft.setTextColor(BLUE);
+      tft.setTextSize(3);
+      tft.print(balance);
+      tft.setTextColor(YELLOW);
+      tft.print(F("$"));
+      tft.setCursor(INFO_X, INFO_Y+120);
+      tft.setTextColor(WHITE);
+      tft.setTextSize(2);
+      tft.print(F("Across:"));
+      tft.setTextColor(BLUE);
+      tft.print(acctNum);
+      tft.setTextColor(WHITE);
+      tft.println(F(" accounts"));
+      
+    }
+    if(pannel==2){
+      tft.setTextSize(2);
+      tft.println(F("Last transaction:"));
+      tft.setCursor(INFO_X, INFO_Y+60);
+      tft.setTextColor(BLUE);
+      tft.setTextSize(3);
+      tft.print(lastAmount);
+      tft.setTextColor(YELLOW);
+      tft.print(F("$"));
+      tft.setCursor(INFO_X, INFO_Y+120);
+      tft.setTextSize(2);
+      tft.setTextColor(WHITE);
+      tft.print(F("Category:"));
+      tft.setCursor(INFO_X, INFO_Y+150);
+      tft.setTextColor(BLUE);
+      tft.setTextSize(1);
+      tft.println(lastCat);
+      tft.setTextColor(WHITE);
+      
+    }
   }
-   tft.setRotation(0);
+   tft.setRotation(2);
 }
 
 
@@ -206,12 +252,34 @@ void checkButton(void){
   //pinMode(XP, OUTPUT);
   pinMode(XM, OUTPUT);
   pinMode(YP, OUTPUT);
-
+  byte rotation =2;
    if (p.z > MINPRESSURE && p.z < MAXPRESSURE) {
     // scale from 0->1023 to tft.width
     p.x = map(p.x, TS_MINX, TS_MAXX, tft.width(), 0);
     p.y = (tft.height()-map(p.y, TS_MINY, TS_MAXY, tft.height(), 0));
    }
+    if (rotation == 2) 
+    {
+      p.x = 240 - p.x;
+      p.y = 320 - p.y;
+    }
+    else if (rotation == 1) 
+    {
+      //  p.y reversed
+      p.x = 320 - p.y;
+      p.y = p.x;
+    }
+    else if (rotation == 0) 
+    {
+      p.x = p.x;
+      p.y = p.y;
+    }
+    else if (rotation == 3) 
+    {
+      //  p.x, p.y reversed
+      p.x = p.y;
+      p.y = 240 - p.x;
+    }
    
   // go thru all the buttons, checking if they were pressed
   for (uint8_t b=0; b<2; b++) {
@@ -255,21 +323,24 @@ void checkButton(void){
 }
 
 void refresh(void){  
-    Ciao.write(CONNECTOR, TOPIC_UP,RFRSH );
-    delay(500); // wait for replay
+    Ciao.write(CONNECTOR, TOPIC_UP, DEVICE_ID );
+    delay(300); // wait for replay
     receiveAccts();
+    Serial.print(F("done with rec"));
     updateInfo=1;
     createButton();
 }
 
 void receiveAccts(void){
   CiaoData data; 
-  for (uint8_t i=0; i<500;i++){
+  for (uint8_t i=0; i<300;i++){
     data = Ciao.read(CONNECTOR, TOPIC);
     if (!data.isEmpty()){
        const char *message = data.get(2);
-        Serial.println(F("got it"));
+        Serial.println(F("got it in"));
+        Serial.println(i);
         parseAcctInfo(message);
+        dataRfrsh=1;
         updateInfo=1;
         break;
      } 
@@ -283,24 +354,24 @@ void parseAcctInfo(char *info){
   //  account name|balance| last transaction
 
   char *token;
-  uint8_t j=0;
   uint8_t k=0;
+ 
    while ((token = strtok_r(info, "|", &info)) != NULL){
-      k=j % 3;
-      Serial.println(k);
-      uint8_t idx=(j-k)/3;
-      Serial.println(idx);
+      
       if(k == 0){
-        strncpy(accountNames[idx],token, 15);
+        strncpy(acctNum,token, 2);
       }
       if(k== 1){
-        strncpy(balances[idx],token, 5);
+        strncpy(balance,token, 10);
       }
       if(k ==2){
-        strncpy(lastTra[idx],token, 15);
+        strncpy(lastAmount,token, 10);
       }
-      acctNumber=idx+1;
-      j++;
+      if(k ==3){
+        strncpy(lastCat,token, 20);
+      }
+    
+      k++;
       
   }
   

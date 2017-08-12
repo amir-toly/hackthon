@@ -21,6 +21,9 @@ module.exports = {
         var j = 0;
         var balances_ = [];
         var transactions_ = [];
+        var traList = [];
+        var balList = [];
+
 
         Mop.findOne({ 'app_key': app_key }, 'app_key, refresh_token', function (err, mop) {
           if (err) {
@@ -50,6 +53,7 @@ module.exports = {
 
                                         //MQT.startAndPush("/topic/balances", JSON.stringify(body));
                                         balances_.push(body);
+                                        balList.push(body.balances[0].balance)
                                         Mop.findOneAndUpdate({ app_key: app_key },
                                                         {$set: {balances: body}},
                                                     function(err, mop){
@@ -60,10 +64,18 @@ module.exports = {
 
                                             //MQT.startAndPush("/topic/transactions", JSON.stringify(body));
                                             transactions_.push(body);
+
+                                            body.transactions.forEach(function(element) {
+                                               traList.push(element);
+                                            });
+
                                             j++;
 
+                                            //function call here
+
+
                                             if (j == accountsLength) {
-                                                 for (var h = 0 ; h < accountsLength; h++) {
+    /*                                             for (var h = 0 ; h < accountsLength; h++) {
 //                                                    var k = {"name" : accounts_.accounts[h].product_name};
 //                                                    k.balance = balances_[h].balances[0].balance;
 //                                                    k.description = transactions_[h].transactions[0].description;
@@ -78,7 +90,8 @@ module.exports = {
                                               }
                                               console.log("summary ");
                                               console.log(summary);
-                                              MQT.startAndPush("/accounts/AE3F5", JSON.stringify(summary));
+    */                                          var mqqtMessage=formatMsg(accountsLength,balList,traList);
+                                                MQT.startAndPush("/accounts/"+app_key, mqqtMessage);
                                             }
 
                                             Mop.findOneAndUpdate({ app_key: app_key },
@@ -144,7 +157,7 @@ module.exports = {
         {
             if ( i > max ) return;
             i = i + 1;
-            setTimeout( function(){ recursive(i, max); }, 2000 );
+            setTimeout( function(){ recursive(i, max); }, 200 );
         }
 
 
@@ -172,6 +185,29 @@ module.exports = {
                 }
 
             })
+        }
+
+        function formatMsg(numAcct, balances, transactions) {
+            // numberof Acct|sum of bal|lastTrx of all|category
+
+            var total=balances.reduce(getTotal,0);
+            //sort all transactions
+
+            transactions.sort(function(a, b){
+                var keyA = new Date(a.transaction_date),
+                    keyB = new Date(b.transaction_date);
+                // Compare the 2 dates
+                if(keyA < keyB) return -1;
+                if(keyA > keyB) return 1;
+                return 0;
+            });
+            return numAcct+"|"+total+"|"+transactions[0].amount+"|"+transactions[0].category;
+
+
+        }
+
+        function getTotal(total, num) {
+            return total + num;
         }
 
         function getTransactions(accountId, access_token, callback) {
