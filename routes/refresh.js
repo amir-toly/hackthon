@@ -48,7 +48,8 @@ module.exports = {
                                     var obj = body.accounts[i];
 
                                     console.log(obj.account_id);
-
+                                    j++;
+                                    setTimeout(
                                     getBalances(obj.account_id, mop.access_token, function(err, body) {
 
                                         //MQT.startAndPush("/topic/balances", JSON.stringify(body));
@@ -69,7 +70,7 @@ module.exports = {
                                                traList.push(element);
                                             });
 
-                                            j++;
+
 
                                             //function call here
 
@@ -100,7 +101,8 @@ module.exports = {
                                                             if(err) console.log('Error updating Mop');
                                                     });
                                         });
-                                    });
+                                    })
+                                        ,j*150)
 
                                   }
 
