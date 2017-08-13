@@ -29,7 +29,7 @@ block content
         div.signup-wall
             if accounts
                 ul
-                for acct in accounts
+                for acct in accounts.accounts
                     li #{acct.product_name}
             else
                 div.row.space.my-app
