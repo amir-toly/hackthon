@@ -1,5 +1,5 @@
 # specify the node base image with your desired version node:<version>
-FROM node:7
+FROM node:6
 WORKDIR /app
 COPY package.json /app
 RUN npm install
