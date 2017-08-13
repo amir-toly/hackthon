@@ -91,8 +91,8 @@
 
 #define CONNECTOR "mqtt"
 #define TOPIC_UP "/refresh"
-#define TOPIC "/accounts/AE3D6"
-#define DEVICE_ID "AE3D6"
+#define TOPIC "/accounts/AE34R"
+#define DEVICE_ID "AE34R"
 #include <MCUFRIEND_kbv.h>
 MCUFRIEND_kbv tft;
 TouchScreen ts = TouchScreen(XP, YP, XM, YM, 300);
@@ -335,7 +335,7 @@ void refresh(void) {
 
 void receiveAccts(void) {
   CiaoData data;
-  for (uint16_t i = 0; i < 500; i++) {
+  for (uint16_t i = 0; i < 850; i++) {
     data = Ciao.read(CONNECTOR, TOPIC);
     if (!data.isEmpty()) {
       const char *message = data.get(2);
