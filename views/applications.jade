@@ -1,26 +1,32 @@
 extends layout
 
 block content
-    h1.text-center All your Apps
-    .panel.panel-default
-        for app in apps
-            .panel-body
-                a(href='/application/#{app._id}') #{app.name}
-                #{app.description}
-                form(action='/applications/destroy/#{app._id}', method='post')
-                    input.btn.btn-danger.pull-right(type='submit', value='Delete')
+    div.signup-wall
+        h1.page-title  All your Internet of Things
+    div.signup-wall
+        div.panel-body
+            for app in apps
+                .row.app-table
+                    .col1
+                        a(href='/application/#{app._id}').my-app #{app.name}
+                    .col2
+                        text #{app.description}
+                    .col3
+                        form(action='/applications/destroy/#{app._id}', method='post')
+                            input.btn.btn-danger(type='submit', value='Delete')
 
 
     form(method='post', action='/applications/create')
-        div
-            label(for='name') Name:
-            input.form-control(type='text', placeholder='app name', name='name',required)
-        div
-            label(for='description') Description:
-            input.form-control(type='text', placeholder='description', name='description',required)
-        div
-            label(for='app key') App Key:
-            input.form-control(type='text', placeholder='app key', name='app_key',required)
-        div.row.space
-            button.btn.btn-primary(type='submit', value='Add app') Create your App
-            a(href='/home').btn.btn-default.btn Back
+        div.signup-wall
+            div
+                label(for='name') Name:
+                input.form-control(type='text', placeholder='app name', name='name',required)
+            div
+                label(for='description') Description:
+                input.form-control(type='text', placeholder='description', name='description',required)
+            div
+                label(for='app key') App Key:
+                input.form-control(type='text', placeholder='app key', name='app_key',required)
+            div.row.space
+                button.btn.btn-primary(type='submit', value='Add app') Create your App
+                a(href='/home').btn.btn-default.btn Back

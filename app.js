@@ -8,7 +8,12 @@ var bodyParser = require('body-parser');
 var dbConfig = require('./db');
 var mongoose = require('mongoose');
 // Connect to DB
-mongoose.connect(dbConfig.url);
+mongoose.connect(dbConfig.url, function(err) {
+    if (err) {
+        console.log("ERROR Cannot CONNECT!!" + err)
+        throw err;
+    }
+});
 
 var app = express();
 

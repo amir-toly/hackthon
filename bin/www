@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-var debug = require('debug')('passport-mongo');
+var debug = require('debug')('iotgateway');
 var app = require('../app');
 
 app.set('port', process.env.PORT || 3000);

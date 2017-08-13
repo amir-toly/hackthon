@@ -4,9 +4,10 @@
 extends layout
 
 block content
-    h1.text-center Application: #{oneapp.name}
+    div.signup-wall
+        h1.page-title Application: #{oneapp.name}
     form(method='post', action='/applications/edit/#{oneapp._id}')
-        div.container
+        div.signup-wall
             div.row.space
                 div.col-md-2.col-md-offset-4
                     label(for='name') Name:
@@ -25,5 +26,6 @@ block content
             div.row.space
                 input(type='submit', value='Update').btn.btn-primary.btn
                 a(href='/applications').btn.btn-default.btn Back
-            div.row.space
+        div.signup-wall
+            div.row.space.my-app
                 a(href='https://sandbox.api.macquariebank.io/connect/v1/user-interface/login?client_id='+process.env.CLIENT_ID+'&state='+oneapp.app_key, target='_self' class='text-center') Connect to Macquarie account
