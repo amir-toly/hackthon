@@ -17,7 +17,7 @@ module.exports = {
         Applications.findById(id, function(err, applications){
             if(err) res.render('error', { error: 'Could not fetch items from database :('});
             console.log('App to be edited'+applications);
-            Mop.findOne({ app_key: Applications.app_key },function (err,mops) {
+            Mop.findOne({ app_key: applications.app_key },function (err,mops) {
                 if (err) res.render('error', {error: 'getting Applications mop'})
                 if(mops) {
                     console.log('linked accounts found'+mops);
@@ -45,7 +45,7 @@ module.exports = {
 
         Applications.findByIdAndRemove(id, function(err, applications){
             if(err) res.render('error', { error: 'Error deleting Applications'});
-            Mop.findOneAndRemove({ app_key: Applications.app_key },function (err,mops) {
+            Mop.findOneAndRemove({ app_key: applications.app_key },function (err,mops) {
                 if(err) res.render('error', { error: 'Error deleting Applications mop'});
                 if(mops) console.log('linked accts removed');
                 res.redirect('/applications');
