@@ -13,7 +13,7 @@ var client_secret = process.env.CLIENT_SECRET;
 module.exports = {
 
 //    handleRefresh: function(req, res) {
-      handleRefresh: function(app_key) {
+    handleRefresh: function(app_key) {
 //        var app_key = req.query.appkey;
         console.log('app_key:' + app_key)
         var refresh_token;
@@ -26,101 +26,100 @@ module.exports = {
 
 
         Mop.findOne({ 'app_key': app_key }, 'app_key, refresh_token', function (err, mop) {
-          if (err) {
-            console.log('err:' + err);
-            redirect('/error');
-          };
-          console.log('Mop is:' + mop)
-          refresh_token = mop.refresh_token;
+            if (err) {
+                console.log('err:' + err);
+                redirect('/error');
+            };
+            console.log('Mop is:' + mop)
+            refresh_token = mop.refresh_token;
 
-          getNewAccessToken(refresh_token, function(err, body) {
-              console.log('getNewAccessToken err:' + err);
-              console.log('getNewAccessToken body:' + body);
-              Mop.findOneAndUpdate({app_key: app_key},
-                          { $set: {access_token: body.access_token,
-                          refresh_token: body.refresh_token}}, function(err, mop){
+            getNewAccessToken(refresh_token, function(err, body) {
+                console.log('getNewAccessToken err:' + err);
+                console.log('getNewAccessToken body:' + body);
+                Mop.findOneAndUpdate({app_key: app_key},
+                    { $set: {access_token: body.access_token,
+                        refresh_token: body.refresh_token}}, function(err, mop){
 
-                              getAccounts(mop.access_token, function(err, body) {
-                                    var accounts_ = body;
-                                    var accountsLength = body.accounts.length;
+                        getAccounts(mop.access_token, function(err, body) {
+                            var accounts_ = body;
+                            var accountsLength = body.accounts.length;
 
-                                  for(var i = 0; i < body.accounts.length; i++) {
-                                    var obj = body.accounts[i];
+                            for(var i = 0; i < body.accounts.length; i++) {
+                                var obj = body.accounts[i];
 
-                                    console.log(obj.account_id);
-                                    j++;
-                                    setTimeout(
-                                    getBalances(obj.account_id, mop.access_token, function(err, body) {
+                                console.log(obj.account_id);
 
-                                        //MQT.startAndPush("/topic/balances", JSON.stringify(body));
-                                        balances_.push(body);
-                                        balList.push(body.balances[0].balance)
-                                        Mop.findOneAndUpdate({ app_key: app_key },
-                                                        {$set: {balances: body}},
-                                                    function(err, mop){
-                                                        if(err) console.log('Error updating Mop');
-                                                });
+                                getBalances(obj.account_id, mop.access_token, function(err, body) {
 
-                                        getTransactions(obj.account_id, mop.access_token, function(err, body) {
-
-                                            //MQT.startAndPush("/topic/transactions", JSON.stringify(body));
-                                            transactions_.push(body);
-
-                                            body.transactions.forEach(function(element) {
-                                               traList.push(element);
-                                            });
-
-
-
-                                            //function call here
-
-
-                                            if (j == accountsLength) {
-    /*                                             for (var h = 0 ; h < accountsLength; h++) {
-//                                                    var k = {"name" : accounts_.accounts[h].product_name};
-//                                                    k.balance = balances_[h].balances[0].balance;
-//                                                    k.description = transactions_[h].transactions[0].description;
-
-                                                    var k = accounts_.accounts[h].product_name + "|"
-                                                    + balances_[h].balances[0].balance + '|' + transactions_[h].transactions[0].description;
-                                                    if (h == 0) {
-                                                        summary = k;
-                                                    } else {
-                                                        summary = summary + '|' + k;
-                                                    }
-                                              }
-                                              console.log("summary ");
-                                              console.log(summary);
-    */                                          var mqqtMessage=formatMsg(accountsLength,balList,traList);
-                                                MQT.startAndPush("/accounts/"+app_key, mqqtMessage);
-                                            }
-
-                                            Mop.findOneAndUpdate({ app_key: app_key },
-                                                            {$set: {transactions: body}},
-                                                        function(err, mop){
-                                                            if(err) console.log('Error updating Mop');
-                                                    });
+                                    //MQT.startAndPush("/topic/balances", JSON.stringify(body));
+                                    balances_.push(body);
+                                    balList.push(body.balances[0].balance)
+                                    Mop.findOneAndUpdate({ app_key: app_key },
+                                        {$set: {balances: body}},
+                                        function(err, mop){
+                                            if(err) console.log('Error updating Mop');
                                         });
-                                    })
-                                        ,j*150)
 
-                                  }
+                                    getTransactions(obj.account_id, mop.access_token, function(err, body) {
 
-                                  //MQT.startAndPush("/topic/accounts", JSON.stringify(body));
-                                  console.log('accounts are: ' + body)
+                                        //MQT.startAndPush("/topic/transactions", JSON.stringify(body));
+                                        transactions_.push(body);
 
-                                  Mop.findOneAndUpdate({ app_key: app_key },
-                                                  {$set: {accounts: body}},
-                                              function(err, mop){
-                                                  if(err) console.log('Error updating Mop');
-                                                //res.send(200);
-                                          });
-                              });
+                                        body.transactions.forEach(function(element) {
+                                            traList.push(element);
+                                        });
+
+                                        j++;
+
+                                        //function call here
 
 
+                                        if (j == accountsLength) {
+                                            /*                                             for (var h = 0 ; h < accountsLength; h++) {
+                                             //                                                    var k = {"name" : accounts_.accounts[h].product_name};
+                                             //                                                    k.balance = balances_[h].balances[0].balance;
+                                             //                                                    k.description = transactions_[h].transactions[0].description;
 
-              });
-          });
+                                             var k = accounts_.accounts[h].product_name + "|"
+                                             + balances_[h].balances[0].balance + '|' + transactions_[h].transactions[0].description;
+                                             if (h == 0) {
+                                             summary = k;
+                                             } else {
+                                             summary = summary + '|' + k;
+                                             }
+                                             }
+                                             console.log("summary ");
+                                             console.log(summary);
+                                             */
+                                            var mqqtMessage=formatMsg(accountsLength,balList,traList);
+                                            MQT.startAndPush("/accounts/"+app_key, mqqtMessage);
+                                        }
+
+                                        Mop.findOneAndUpdate({ app_key: app_key },
+                                            {$set: {transactions: body}},
+                                            function(err, mop){
+                                                if(err) console.log('Error updating Mop');
+                                            });
+                                    });
+                                });
+
+                            }
+
+                            //MQT.startAndPush("/topic/accounts", JSON.stringify(body));
+                            console.log('accounts are: ' + body)
+
+                            Mop.findOneAndUpdate({ app_key: app_key },
+                                {$set: {accounts: body}},
+                                function(err, mop){
+                                    if(err) console.log('Error updating Mop');
+                                    //res.send(200);
+                                });
+                        });
+
+
+
+                    });
+            });
 
         })
 
