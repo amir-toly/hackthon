@@ -20,6 +20,7 @@
     "request": "2.81.0",
     "mqtt": "2.10.0",
     "bcrypt-nodejs" : "*",
-    "connect-flash" : "*"
+    "connect-flash" : "*",
+    "sync" :"^0.2.5"
   }
 }

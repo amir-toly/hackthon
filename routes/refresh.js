@@ -1,4 +1,5 @@
 var mongoose = require('mongoose');
+var Sync = require('sync');
 var request = require('request').defaults({
     //proxy: '',
     timeout: 60000
@@ -40,7 +41,10 @@ module.exports = {
                     { $set: {access_token: body.access_token,
                         refresh_token: body.refresh_token}}, function(err, mop){
 
-                        getAccounts(mop.access_token, function(err, body) {
+                    Sync(function () {
+                        
+
+                        getAccounts.sync(null,mop.access_token, function(err, body) {
                             var accounts_ = body;
                             var accountsLength = body.accounts.length;
 
@@ -115,7 +119,7 @@ module.exports = {
                                     //res.send(200);
                                 });
                         });
-
+                    });
 
 
                     });
