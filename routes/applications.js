@@ -17,9 +17,16 @@ module.exports = {
         Applications.findById(id, function(err, applications){
             if(err) res.render('error', { error: 'Could not fetch items from database :('});
             console.log('App to be edited'+applications);
+            Mop.findOne({ app_key: Applications.app_key },function (err,mops) {
+                if (err) res.render('error', {error: 'getting Applications mop'})
+                if(mops) {
+                    res.render('application', {oneapp: applications, accounts: mops.accounts});
+                }else {
+                    res.render('application', {oneapp: applications, accounts:null});
+                }
+            })
 
 
-            res.render('application', { oneapp: applications })
         });
     },
     create: function(req, res){
@@ -36,7 +43,11 @@ module.exports = {
 
         Applications.findByIdAndRemove(id, function(err, applications){
             if(err) res.render('error', { error: 'Error deleting Applications'});
-            res.redirect('/applications');
+            Mop.findOneAndRemove({ app_key: Applications.app_key },function (err,mops) {
+                if(err) res.render('error', { error: 'Error deleting Applications mop'});
+                res.redirect('/applications');
+            });
+
         });
         //remove the MOP obj with the appkey
         // Mop.findBy(app_key )
