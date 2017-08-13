@@ -20,7 +20,7 @@ module.exports = {
             Mop.findOne({ app_key: applications.app_key },function (err,mops) {
                 if (err) res.render('error', {error: 'getting Applications mop'})
                 if(mops) {
-                    console.log('linked accounts found'+mops);
+                    console.log('linked accounts found'+mops.accounts);
                     res.render('application', {oneapp: applications, accounts: mops.accounts});
                 }else {
                     console.log('NO linked accounts');
