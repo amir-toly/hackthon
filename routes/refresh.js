@@ -157,7 +157,7 @@ module.exports = {
         {
             if ( i > max ) return;
             i = i + 1;
-            setTimeout( function(){ recursive(i, max); }, 200 );
+            setTimeout( function(){ recursive(i, max); }, 150 );
         }
 
 
@@ -248,6 +248,7 @@ module.exports = {
                 method: 'GET',
                 json: true
             };
+            console.log("Balances for acct: "+ accountId)
             recursive(1, 10);
             request(options, function(error, response, body) {
                 if (!error && response.statusCode == 200) {

@@ -22,8 +22,8 @@ spec:
     - name: MQTT_PORT
       value: "10513"
     - name: MQTT_USERNAME
-      value: "test"
+      value: "vuvawrqs"
     - name: MQTT_PASSWORD
-      value: "test"
+      value: "HtWwI7a3emnC"
     - name: DEBUG
       value: "*"
