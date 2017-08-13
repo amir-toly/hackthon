@@ -1,6 +1,6 @@
 var mongoose = require('mongoose'),
     Applications = mongoose.model('Applications');
-
+    Mop = mongoose.model('Mop');
 module.exports = {
     all: function(req, res){
         console.log('we are in appls.all');
@@ -38,6 +38,8 @@ module.exports = {
             if(err) res.render('error', { error: 'Error deleting Applications'});
             res.redirect('/applications');
         });
+        //remove the MOP obj with the appkey
+        // Mop.findBy(app_key )
     },
     edit: function(req, res){
         var id = req.params.id;
