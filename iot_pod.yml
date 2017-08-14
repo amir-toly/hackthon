@@ -14,9 +14,9 @@ spec:
     - name: DB_NAME
       value: "hackathon"
     - name: CLIENT_ID
-      value: "20yupeh39V13Ch7CQsAG36ktDhtDN8jM"
+      value: "qoUrp9M8yVD2gOgi9QxyPPdaDLrTz7jy"
     - name: CLIENT_SECRET
-      value: "O8yqGigymc3W1Vc6"
+      value: "ls5tr2WFcsr1J74x"
     - name: NODE_ENV
       value: "development"
     - name: MQTT_PORT
