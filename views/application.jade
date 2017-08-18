@@ -27,5 +27,11 @@ block content
                 input(type='submit', value='Update').btn.btn-primary.btn
                 a(href='/applications').btn.btn-default.btn Back
         div.signup-wall
-            div.row.space.my-app
-                a(href='https://sandbox.api.macquariebank.io/connect/v1/user-interface/login?client_id='+process.env.CLIENT_ID+'&state='+oneapp.app_key, target='_self' class='text-center') Connect to Macquarie account
+            if accounts
+                h1.page-title.text-center Connected Accounts:
+                ul
+                    for acct in accounts
+                        li #{acct.product_name}
+            else
+                div.row.space.my-app
+                    a(href='https://sandbox.api.macquariebank.io/connect/v1/user-interface/login?client_id='+process.env.CLIENT_ID+'&state='+oneapp.app_key, target='_self' class='text-center') Connect to Macquarie account
