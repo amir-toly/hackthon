@@ -17,9 +17,18 @@ module.exports = {
         Applications.findById(id, function(err, applications){
             if(err) res.render('error', { error: 'Could not fetch items from database :('});
             console.log('App to be edited'+applications);
+            Mop.findOne({ app_key: applications.app_key },function (err,mops) {
+                if (err) res.render('error', {error: 'getting Applications mop'})
+                if(mops) {
+                    console.log('linked accounts found');
+                    console.log(mops.accounts);
+                    res.render('application', {oneapp: applications, accounts: mops.accounts[0].accounts});
+                }else {
+                    console.log('NO linked accounts');
+                    res.render('application', {oneapp: applications, accounts:null});
+                }
+            })
 
-
-            res.render('application', { oneapp: applications })
         });
     },
     create: function(req, res){
@@ -36,10 +45,12 @@ module.exports = {
 
         Applications.findByIdAndRemove(id, function(err, applications){
             if(err) res.render('error', { error: 'Error deleting Applications'});
-            res.redirect('/applications');
+            Mop.findOneAndRemove({ app_key: applications.app_key },function (err,mops) {
+                if(err) res.render('error', { error: 'Error deleting Applications mop'});
+                if(mops) console.log('linked accts removed');
+                res.redirect('/applications');
+            });
         });
-        //remove the MOP obj with the appkey
-        // Mop.findBy(app_key )
     },
     edit: function(req, res){
         var id = req.params.id;
