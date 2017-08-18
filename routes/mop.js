@@ -71,7 +71,7 @@ module.exports = {
                     return callback(null, body);
                 } else {
                     console.log(error);
-                    console.log(response);
+                    console.log(body);
                     return callback(error, null)
                 }
 
@@ -98,7 +98,7 @@ module.exports = {
                     return callback(null, body);
                 } else {
                     console.log(error);
-                    console.log(response);
+                    console.log(body);
                     return callback(error, null)
                 }
 

@@ -2,9 +2,9 @@ extends layout
 
 block content
     div.signup-wall
-        h1.page-title  All your Internet of Things
+        h1.page-title.text-center  All your Internet of Things
     div.signup-wall
-        div.panel-body
+        div.panel-body.text-center
             for app in apps
                 .row.app-table
                     .col1
@@ -18,15 +18,21 @@ block content
 
     form(method='post', action='/applications/create')
         div.signup-wall
-            div
-                label(for='name') Name:
-                input.form-control(type='text', placeholder='app name', name='name',required)
-            div
-                label(for='description') Description:
-                input.form-control(type='text', placeholder='description', name='description',required)
-            div
-                label(for='app key') App Key:
-                input.form-control(type='text', placeholder='app key', name='app_key',required)
+            div.row.space
+                div.col-md-2.col-md-offset-4
+                    label(for='name') Name:
+                div.col-md-4
+                    input.form-control(type='text', placeholder='app name', name='name',required)
+            div.row.space
+                div.col-md-2.col-md-offset-4
+                    label(for='description') Description:
+                div.col-md-4
+                    input.form-control(type='text', placeholder='description', name='description',required)
+            div.row.space
+                div.col-md-2.col-md-offset-4
+                    label(for='app key') App Key:
+                div.col-md-4
+                    input.form-control(type='text', placeholder='app key', name='app_key',required)
             div.row.space
                 button.btn.btn-primary(type='submit', value='Add app') Create your App
                 a(href='/home').btn.btn-default.btn Back
