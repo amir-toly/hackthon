@@ -5,7 +5,7 @@ var request = require('request').defaults({
 });
 
 var MQT = require('./mqt');
-var Mop = mongoose.model('Mop');
+var Applications = mongoose.model('Applications');
 
 var client_id = process.env.CLIENT_ID;
 var client_secret = process.env.CLIENT_SECRET;
@@ -25,22 +25,22 @@ module.exports = {
         var balList = [];
 
 
-        Mop.findOne({ 'app_key': app_key }, 'app_key, refresh_token', function (err, mop) {
+        Applications.findOne({ 'app_key': app_key }, 'app_key, refresh_token', function (err, app) {
             if (err) {
                 console.log('err:' + err);
                 redirect('/error');
             };
-            console.log('Mop is:' + mop)
-            refresh_token = mop.refresh_token;
+            console.log('Applications is:' + app)
+            refresh_token = app.refresh_token;
 
             getNewAccessToken(refresh_token, function(err, body) {
                 console.log('getNewAccessToken err:' + err);
                 console.log('getNewAccessToken body:' + body);
-                Mop.findOneAndUpdate({app_key: app_key},
+                Applications.findOneAndUpdate({app_key: app_key},
                     { $set: {access_token: body.access_token,
-                        refresh_token: body.refresh_token}}, function(err, mop){
+                        refresh_token: body.refresh_token}}, function(err, app){
 
-                        getAccounts(mop.access_token, function(err, body) {
+                        getAccounts(app.access_token, function(err, body) {
                             var accounts_ = body;
                             var accountsLength = body.accounts.length;
 
@@ -49,18 +49,18 @@ module.exports = {
 
                                 console.log(obj.account_id);
 
-                                getBalances(obj.account_id, mop.access_token, function(err, body) {
+                                getBalances(obj.account_id, app.access_token, function(err, body) {
 
                                     //MQT.startAndPush("/topic/balances", JSON.stringify(body));
                                     balances_.push(body);
                                     balList.push(body.balances[0].balance)
-                                    Mop.findOneAndUpdate({ app_key: app_key },
+                                    Applications.findOneAndUpdate({ app_key: app_key },
                                         {$set: {balances: body}},
-                                        function(err, mop){
-                                            if(err) console.log('Error updating Mop');
+                                        function(err, app){
+                                            if(err) console.log('Error updating Applications');
                                         });
 
-                                    getTransactions(obj.account_id, mop.access_token, function(err, body) {
+                                    getTransactions(obj.account_id, app.access_token, function(err, body) {
 
                                         //MQT.startAndPush("/topic/transactions", JSON.stringify(body));
                                         transactions_.push(body);
@@ -71,34 +71,16 @@ module.exports = {
 
                                         j++;
 
-                                        //function call here
-
-
                                         if (j == accountsLength) {
-                                            /*                                             for (var h = 0 ; h < accountsLength; h++) {
-                                             //                                                    var k = {"name" : accounts_.accounts[h].product_name};
-                                             //                                                    k.balance = balances_[h].balances[0].balance;
-                                             //                                                    k.description = transactions_[h].transactions[0].description;
 
-                                             var k = accounts_.accounts[h].product_name + "|"
-                                             + balances_[h].balances[0].balance + '|' + transactions_[h].transactions[0].description;
-                                             if (h == 0) {
-                                             summary = k;
-                                             } else {
-                                             summary = summary + '|' + k;
-                                             }
-                                             }
-                                             console.log("summary ");
-                                             console.log(summary);
-                                             */
                                             var mqqtMessage=formatMsg(accountsLength,balList,traList);
                                             MQT.startAndPush("/accounts/"+app_key, mqqtMessage);
                                         }
 
-                                        Mop.findOneAndUpdate({ app_key: app_key },
+                                        Applications.findOneAndUpdate({ app_key: app_key },
                                             {$set: {transactions: body}},
-                                            function(err, mop){
-                                                if(err) console.log('Error updating Mop');
+                                            function(err, app){
+                                                if(err) console.log('Error updating Applications');
                                             });
                                     });
                                 });
@@ -108,10 +90,10 @@ module.exports = {
                             //MQT.startAndPush("/topic/accounts", JSON.stringify(body));
                             console.log('accounts are: ' + body)
 
-                            Mop.findOneAndUpdate({ app_key: app_key },
+                            Applications.findOneAndUpdate({ app_key: app_key },
                                 {$set: {accounts: body}},
-                                function(err, mop){
-                                    if(err) console.log('Error updating Mop');
+                                function(err, app){
+                                    if(err) console.log('Error updating Applications');
                                     //res.send(200);
                                 });
                         });
