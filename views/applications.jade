@@ -3,18 +3,21 @@ extends layout
 block content
     div.signup-wall
         h1.page-title.text-center  All your Internet of Things
-    div.signup-wall
-        div.panel-body.text-center
-            for app in apps
-                .row.app-table
-                    .col1
-                        a(href='/application/#{app._id}').my-app #{app.name}
-                    .col2
-                        text #{app.description}
-                    .col3
-                        form(action='/applications/destroy/#{app._id}', method='post')
-                            input.btn.btn-danger(type='submit', value='Delete')
-
+    if apps.length > 0
+        div.signup-wall
+            div.panel-body.text-center
+                for app in apps
+                    .row.app-table
+                        .col1
+                            a(href='/application/#{app._id}').my-app #{app.name}
+                        .col2
+                            text #{app.description}
+                        .col3
+                            form(action='/applications/destroy/#{app._id}', method='post')
+                                input.btn.btn-danger(type='submit', value='Delete')
+    else
+        div.signup-wall
+            h3.text-center  You do not have any applications yet.
 
     form(method='post', action='/applications/create')
         div.signup-wall

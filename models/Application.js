@@ -9,6 +9,11 @@ var applicationSchema = new Schema({
     user_id: String,
     name: String,
     description: String,
-    app_key: String
+    app_key: String,
+    refresh_token: String,
+    access_token: String,
+    accounts: [],
+    balances: [],
+    transactions: []
 });
 module.exports = mongoose.model('Applications', applicationSchema);

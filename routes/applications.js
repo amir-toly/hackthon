@@ -1,6 +1,5 @@
 var mongoose = require('mongoose'),
     Applications = mongoose.model('Applications');
-    Mop = mongoose.model('Mop');
 module.exports = {
     all: function(req, res){
         console.log('we are in appls.all');
@@ -8,6 +7,7 @@ module.exports = {
         Applications.find({'user_id': req.user._id}, function(err, applications){
             if(err) res.render('error', { error: 'Could not fetch items from database :('});
             console.log('in the callback')
+            console.log(applications)
             res.render('applications', { apps: applications });
         });
     },
@@ -17,18 +17,14 @@ module.exports = {
         Applications.findById(id, function(err, applications){
             if(err) res.render('error', { error: 'Could not fetch items from database :('});
             console.log('App to be edited'+applications);
-            Mop.findOne({ app_key: applications.app_key },function (err,mops) {
-                if (err) res.render('error', {error: 'getting Applications mop'})
-                if(mops) {
-                    console.log('linked accounts found');
-                    console.log(mops.accounts);
-                    res.render('application', {oneapp: applications, accounts: mops.accounts[0].accounts});
-                }else {
-                    console.log('NO linked accounts');
-                    res.render('application', {oneapp: applications, accounts:null});
-                }
-            })
-
+            if(applications.accounts.length > 0) {
+                console.log('linked accounts found');
+                console.log(applications.accounts);
+                res.render('application', {oneapp: applications, accounts: applications.accounts[0].accounts});
+            }else {
+                console.log('NO linked accounts');
+                res.render('application', {oneapp: applications, accounts:null});
+            }
         });
     },
     create: function(req, res){
@@ -45,11 +41,7 @@ module.exports = {
 
         Applications.findByIdAndRemove(id, function(err, applications){
             if(err) res.render('error', { error: 'Error deleting Applications'});
-            Mop.findOneAndRemove({ app_key: applications.app_key },function (err,mops) {
-                if(err) res.render('error', { error: 'Error deleting Applications mop'});
-                if(mops) console.log('linked accts removed');
-                res.redirect('/applications');
-            });
+            res.redirect('/applications');
         });
     },
     edit: function(req, res){
