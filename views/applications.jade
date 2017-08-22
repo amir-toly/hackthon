@@ -7,7 +7,7 @@ block content
         div.signup-wall
             div.panel-body.text-center
                 for app in apps
-                    .row.app-table
+                    .row.app-table.space-after
                         .col1
                             a(href='/application/#{app._id}').my-app #{app.name}
                         .col2
@@ -31,6 +31,14 @@ block content
                     label(for='description') Description:
                 div.col-md-4
                     input.form-control(type='text', placeholder='description', name='description',required)
+            div.row.space
+                div.col-md-2.col-md-offset-4
+                    label(for='type') Type:
+                div.col-md-4
+                    select.form-control(name='type',required)
+                        option(value='') Select a Type
+                        each type in types
+                            option(value=type) #{type}
             div.row.space
                 div.col-md-2.col-md-offset-4
                     label(for='app key') App Key:

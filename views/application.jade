@@ -20,6 +20,13 @@ block content
                     input.form-control(value='#{oneapp.description}', name='description')
             div.row.space
                 div.col-md-2.col-md-offset-4
+                    label(for='type') Type:
+                div.col-md-4
+                    select.form-control(name='type',required)
+                        for type in types
+                            option(value=type, selected=(type == '#{oneapp.type}')) #{type}
+            div.row.space
+                div.col-md-2.col-md-offset-4
                     label(for='app_key') App Key:
                 div.col-md-4
                     input.form-control(value='#{oneapp.app_key}', name='app_key')

@@ -1,5 +1,8 @@
 var mongoose = require('mongoose'),
     Applications = mongoose.model('Applications');
+
+var types = ['Fridge-ATM', 'T-Shirt'];
+
 module.exports = {
     all: function(req, res){
         console.log('we are in appls.all');
@@ -8,7 +11,7 @@ module.exports = {
             if(err) res.render('error', { error: 'Could not fetch items from database :('});
             console.log('in the callback')
             console.log(applications)
-            res.render('applications', { apps: applications });
+            res.render('applications', { apps: applications, types: types });
         });
     },
     viewOne: function(req, res){
@@ -20,17 +23,17 @@ module.exports = {
             if(applications.accounts.length > 0) {
                 console.log('linked accounts found');
                 console.log(applications.accounts);
-                res.render('application', {oneapp: applications, accounts: applications.accounts[0].accounts});
+                res.render('application', {oneapp: applications, accounts: applications.accounts[0].accounts, types: types});
             }else {
                 console.log('NO linked accounts');
-                res.render('application', {oneapp: applications, accounts:null});
+                res.render('application', {oneapp: applications, accounts:null, types: types});
             }
         });
     },
     create: function(req, res){
         var appName = req.body.name;
         // create todo
-        Applications.create({ name: appName,user_id: req.user._id, description: req.body.description, app_key: req.body.app_key  }, function(err, applications){
+        Applications.create({ name: appName,user_id: req.user._id, description: req.body.description, type: req.body.type,app_key: req.body.app_key  }, function(err, applications){
             if(err) res.render('error', { error: 'Error creating your apps :('})
             // reload collection
             res.redirect('/applications');
@@ -49,7 +52,7 @@ module.exports = {
         console.log('editing app name'+ req.body.name);
         console.log('editing app desc'+ req.body.description);
         Applications.findOneAndUpdate({ _id: req.params.id },
-                {$set: {name: req.body.name, description: req.body.description, app_key: req.body.app_key}},
+                {$set: {name: req.body.name, description: req.body.description, type: req.body.type, app_key: req.body.app_key}},
             function(err, applications){
                 if(err) res.render('error', { error: 'Error updating Application'});
             res.redirect('/applications');

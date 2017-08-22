@@ -107,7 +107,6 @@ app-table{
 }
 div.row.space{
     margin: 10px 0;
-
     text-align: center;
 }
 .col1 {
@@ -133,3 +132,7 @@ div.row.space{
     vertical-align: text-top;
 
 }
+.space-after{
+    margin-bottom: 10px;
+
+

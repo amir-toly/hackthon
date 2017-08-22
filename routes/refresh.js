@@ -17,6 +17,7 @@ module.exports = {
 //        var app_key = req.query.appkey;
         console.log('app_key:' + app_key)
         var refresh_token;
+        var type;
         var summary = '';
         var j = 0;
         var balances_ = [];
@@ -25,13 +26,14 @@ module.exports = {
         var balList = [];
 
 
-        Applications.findOne({ 'app_key': app_key }, 'app_key, refresh_token', function (err, app) {
+        Applications.findOne({ 'app_key': app_key }, 'app_key, refresh_token, type', function (err, app) {
             if (err) {
                 console.log('err:' + err);
                 redirect('/error');
             };
             console.log('Applications is:' + app)
             refresh_token = app.refresh_token;
+            type = app.type;
 
             getNewAccessToken(refresh_token, function(err, body) {
                 console.log('getNewAccessToken err:' + err);
