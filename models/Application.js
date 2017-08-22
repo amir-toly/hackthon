@@ -9,6 +9,7 @@ var applicationSchema = new Schema({
     user_id: String,
     name: String,
     description: String,
+    type: String,
     app_key: String,
     refresh_token: String,
     access_token: String,
