@@ -48,13 +48,13 @@ MFRC522::MIFARE_Key key;
 
 // text box where numbers go
 #define TEXT_X 10
-#define TEXT_Y 75
+#define TEXT_Y 10
 #define TEXT_W 220
-#define TEXT_H 240
+#define TEXT_H 300
 #define TEXT_TSIZE 3
 
 #define TEXTPOS_X 10
-#define TEXTPOS_Y 75
+#define TEXTPOS_Y 15
 // the data (phone #) we store in the textfield
 
 
@@ -70,7 +70,7 @@ MFRC522::MIFARE_Key key;
 #define KEY_Y 100
 
 // We have a status line for like, is FONA working
-#define INFO_X 90
+#define INFO_X 30
 #define INFO_Y 30
 
 //#include <Wire.h>
@@ -79,16 +79,17 @@ MFRC522::MIFARE_Key key;
 #define CONNECTOR "mqtt"
 #define TOPIC_UP "/refresh"
 #define TOPIC "/accounts"
-#define DEVICE_ID "AE34R"
+
 #include <MCUFRIEND_kbv.h>
 MCUFRIEND_kbv tft;
 
-String key_str;
+char key_str[9]= {'\0'};
 byte updateInfo = 0;
 byte dataRfrsh = 0;
 byte pannel = 1;
 byte pchanged = 0;
 byte cardScanned = 0;
+byte cardFound=0;
 char acctNum[2];
 char balance[10];
 char lastAmount[10];
@@ -104,12 +105,13 @@ void rotate(void) {
   pchanged = 1;
 }
 TimedAction rotatePanel = TimedAction(5000, rotate);
+
+
 void setup(void) {
   Ciao.begin();
   Serial.begin(9600);
   SPI.begin(); // Init SPI bus
  
-
   tft.reset();
   initScreen();
 
@@ -119,6 +121,7 @@ void loop(void) {
   //checkButton();
   readCard();
   if (cardScanned==1){
+    dataRfrsh=0;
     keyDisplay();
     refresh();
     cardScanned=0;
@@ -144,10 +147,8 @@ void readCard(void) {
   if ( ! rfid.PICC_ReadCardSerial())
     return;
 
-  Serial.print(F("PICC type: "));
   MFRC522::PICC_Type piccType = rfid.PICC_GetType(rfid.uid.sak);
-  Serial.println(rfid.PICC_GetTypeName(piccType));
-
+ 
   // Check is the PICC of Classic MIFARE type
   if (piccType != MFRC522::PICC_TYPE_MIFARE_MINI &&  
     piccType != MFRC522::PICC_TYPE_MIFARE_1K &&
@@ -156,8 +157,7 @@ void readCard(void) {
     return;
   }
 
-  
-    Serial.println(F("A new card has been detected."));
+ 
 
     // Store NUID into nuidPICC array
     for (byte i = 0; i < 4; i++) {
@@ -165,11 +165,10 @@ void readCard(void) {
     }
    
     Serial.println(F("The NUID tag is:"));
-    Serial.print(F("In hex: "));
-    key_str= toHex(rfid.uid.uidByte, rfid.uid.size);
+    toHex(rfid.uid.uidByte, rfid.uid.size);
     Serial.println(key_str);
-    cardScanned=1;
-   
+    cardScanned=1; //to display key
+   cardFound=1; //to tell to register
  
   // Halt PICC
   rfid.PICC_HaltA();
@@ -179,22 +178,22 @@ void readCard(void) {
 }
 
 
-String toHex(byte* buffer, byte bufferSizes)
+ void toHex(byte* buffer, byte bufferSizes)
 {
-    char c[bufferSizes * 2];
+
 
     byte b;
 
     for(int bx = 0, cx = 0; bx < bufferSizes; ++bx, ++cx) 
     {
         b = ((byte)(buffer[bx] >> 4));
-        c[cx] = (char)(b > 9 ? b + 0x37 + 0x20 : b + 0x30);
+        key_str[cx] = (char)(b > 9 ? b + 0x37 + 0x20 : b + 0x30);
 
         b = ((byte)(buffer[bx] & 0x0F));
-        c[++cx]=(char)(b > 9 ? b + 0x37 + 0x20 : b + 0x30);
+         key_str[++cx]=(char)(b > 9 ? b + 0x37 + 0x20 : b + 0x30);
     }
 
-    return String(c);
+   
 }
 
 
@@ -213,12 +212,19 @@ void initScreen(void) {
 
 void keyDisplay() {
   tft.setRotation(3);
-  tft.fillRect(INFO_X, INFO_Y, 220, 190, BLACK);
+  tft.fillRect(INFO_X, INFO_Y, 270, 190, BLACK);
+  tft.setCursor(INFO_X, INFO_Y);
+  tft.setTextColor(ILI9341_WHITE);
+  tft.setTextSize(2);
+  tft.println(F("CARD FOUND:"));
   tft.setCursor(KEY_X, KEY_Y);
-  tft.setTextColor(WHITE);
+  tft.setTextColor(ILI9341_RED);
   tft.setTextSize(3);
   tft.print(key_str);
-
+  tft.setCursor(INFO_X, INFO_Y + 130);
+  tft.setTextColor(ILI9341_WHITE);
+  tft.setTextSize(2);
+  tft.println(F("Querying bank info..."));
   delay(3000);
   tft.fillRect(INFO_X, INFO_Y, 190, 190, BLACK);
   tft.setRotation(2);
@@ -233,15 +239,28 @@ void bankDisplay() {
   tft.setTextSize(2);
   tft.setCursor(INFO_X, INFO_Y);
   if (dataRfrsh == 0) {
-    tft.println(F("Nothing to display"));
-    tft.setCursor(INFO_X, INFO_Y + 40);
-    tft.print(F("Please Register"));
-    tft.setCursor(INFO_X, INFO_Y + 80);
-    tft.print(key_str);
+    if(cardFound==0){
+      tft.println(F("Welcome to the"));
+      tft.setCursor(INFO_X + 40, INFO_Y + 60);
+      tft.println(F("Fridge ATM"));
+      tft.setCursor(INFO_X, INFO_Y + 120);
+      tft.print(F("Please scan your card"));
+    }
+    if (cardFound==1){
+      tft.println(F("No info found..."));
+      tft.setCursor(INFO_X, INFO_Y + 40);
+     
+      tft.println(F("Register your card"));
+      tft.setCursor(INFO_X, INFO_Y + 80);
+      tft.println(key_str);
+      tft.setCursor(INFO_X, INFO_Y + 1200);
+      tft.print(F("against your account(s)"));
+    }
+
   } else {
 
     if (pchanged == 1) {
-      tft.fillRect(INFO_X, INFO_Y, 220, 190, BLACK);
+      tft.fillRect(INFO_X, INFO_Y, 250, 190, BLACK);
       pchanged = 0;
     }
 
@@ -291,7 +310,7 @@ void bankDisplay() {
 
 void refresh(void) {
   Ciao.write(CONNECTOR, TOPIC_UP, key_str );
-  delay(500); // wait for replay
+  delay(300); // wait for replay
   receiveAccts();
   Serial.print(F("done with rec"));
   updateInfo = 1;
@@ -300,7 +319,7 @@ void refresh(void) {
 
 void receiveAccts(void) {
   CiaoData data;
-  for (uint16_t i = 0; i < 850; i++) {
+  for (uint16_t i = 0; i < 500; i++) {
     data = Ciao.read(CONNECTOR, TOPIC);
     if (!data.isEmpty()) {
       const char *message = data.get(2);
