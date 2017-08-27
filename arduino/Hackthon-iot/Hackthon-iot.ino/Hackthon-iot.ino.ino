@@ -1,20 +1,15 @@
 #include <TimedAction.h>
 
+#include <SPI.h>
+#include <MFRC522.h>
 
-// IMPORTANT: Adafruit_TFTLCD LIBRARY MUST BE SPECIFICALLY
-// CONFIGURED FOR EITHER THE TFT SHIELD OR THE BREAKOUT BOARD.
-// SEE RELEVANT COMMENTS IN Adafruit_TFTLCD.h FOR SETUP.
+#define SS_PIN 10
+#define RST_PIN 9
+ 
+MFRC522 rfid(SS_PIN, RST_PIN); // Instance of the class
 
-
-#include <Adafruit_GFX.h>    // Core graphics library
-//#include <Adafruit_TFTLCD.h> // Hardware-specific library
-#include <TouchScreen.h>
-
-// The control pins for the LCD can be assigned to any digital or
-// analog pins...but we'll use the analog pins as this allows us to
-// double up the pins with the touch screen (see the TFT paint example).
-
-
+MFRC522::MIFARE_Key key; 
+// Init array that will store new NUID 
 
 
 // When using the BREAKOUT BOARD only, use these 8 data lines to the LCD:
@@ -68,15 +63,7 @@
 #define YM 9   // can be a digital pin
 #define XP 8   // can be a digital pin
 
-#define MINPRESSURE 10
-#define MAXPRESSURE 1000
 
-
-#define TS_MINX 100
-#define TS_MAXX 920
-
-#define TS_MINY 70
-#define TS_MAXY 900
 
 // We have a status line for like, is FONA working
 #define KEY_X 100
@@ -91,20 +78,17 @@
 
 #define CONNECTOR "mqtt"
 #define TOPIC_UP "/refresh"
-#define TOPIC "/accounts/AE34R"
+#define TOPIC "/accounts"
 #define DEVICE_ID "AE34R"
 #include <MCUFRIEND_kbv.h>
 MCUFRIEND_kbv tft;
-TouchScreen ts = TouchScreen(XP, YP, XM, YM, 300);
 
-Adafruit_GFX_Button buttons[2];
-char buttonlabels[2][4] = {"Key", "UPD."};
-const uint16_t buttoncolors[2] = { ILI9341_RED, ILI9341_DARKGREEN};
-
+String key_str;
 byte updateInfo = 0;
 byte dataRfrsh = 0;
 byte pannel = 1;
 byte pchanged = 0;
+byte cardScanned = 0;
 char acctNum[2];
 char balance[10];
 char lastAmount[10];
@@ -123,13 +107,23 @@ TimedAction rotatePanel = TimedAction(5000, rotate);
 void setup(void) {
   Ciao.begin();
   Serial.begin(9600);
+  SPI.begin(); // Init SPI bus
+ 
+
   tft.reset();
-  createButton();
+  initScreen();
 
 }
 void loop(void) {
 
-  checkButton();
+  //checkButton();
+  readCard();
+  if (cardScanned==1){
+    keyDisplay();
+    refresh();
+    cardScanned=0;
+    
+  }
   rotatePanel.check();
   if (updateInfo == 1) {
     pannel = 1;
@@ -139,24 +133,76 @@ void loop(void) {
   bankDisplay();
 }
 
+void readCard(void) {
+  byte nuidPICC[4];
+ rfid.PCD_Init(); // Init MFRC522 
+  // Look for new cards
+  if ( ! rfid.PICC_IsNewCardPresent())
+    return;
 
-void createButton(void) {
+  // Verify if the NUID has been readed
+  if ( ! rfid.PICC_ReadCardSerial())
+    return;
+
+  Serial.print(F("PICC type: "));
+  MFRC522::PICC_Type piccType = rfid.PICC_GetType(rfid.uid.sak);
+  Serial.println(rfid.PICC_GetTypeName(piccType));
+
+  // Check is the PICC of Classic MIFARE type
+  if (piccType != MFRC522::PICC_TYPE_MIFARE_MINI &&  
+    piccType != MFRC522::PICC_TYPE_MIFARE_1K &&
+    piccType != MFRC522::PICC_TYPE_MIFARE_4K) {
+    Serial.println(F("Your tag is not of type MIFARE Classic."));
+    return;
+  }
+
+  
+    Serial.println(F("A new card has been detected."));
+
+    // Store NUID into nuidPICC array
+    for (byte i = 0; i < 4; i++) {
+      nuidPICC[i] = rfid.uid.uidByte[i];
+    }
+   
+    Serial.println(F("The NUID tag is:"));
+    Serial.print(F("In hex: "));
+    key_str= toHex(rfid.uid.uidByte, rfid.uid.size);
+    Serial.println(key_str);
+    cardScanned=1;
+   
+ 
+  // Halt PICC
+  rfid.PICC_HaltA();
+
+  // Stop encryption on PCD
+  rfid.PCD_StopCrypto1();
+}
+
+
+String toHex(byte* buffer, byte bufferSizes)
+{
+    char c[bufferSizes * 2];
+
+    byte b;
+
+    for(int bx = 0, cx = 0; bx < bufferSizes; ++bx, ++cx) 
+    {
+        b = ((byte)(buffer[bx] >> 4));
+        c[cx] = (char)(b > 9 ? b + 0x37 + 0x20 : b + 0x30);
+
+        b = ((byte)(buffer[bx] & 0x0F));
+        c[++cx]=(char)(b > 9 ? b + 0x37 + 0x20 : b + 0x30);
+    }
+
+    return String(c);
+}
+
+
+void initScreen(void) {
   uint16_t identifier = 0x9341;
   tft.begin(identifier);
   tft.setRotation(2);
   tft.fillScreen(BLACK);
-
-  buttons[0].initButton(&tft, 40,
-                        40,    // x, y, w, h, outline, fill, text
-                        BUTTON_W, BUTTON_H, WHITE, buttoncolors[0], WHITE,
-                        buttonlabels[0], BUTTON_TEXTSIZE);
-  buttons[0].drawButton();
-  buttons[1].initButton(&tft, 160,
-                        40,    // x, y, w, h, outline, fill, text
-                        120, BUTTON_H, ILI9341_WHITE, buttoncolors[1], WHITE,
-                        buttonlabels[1], BUTTON_TEXTSIZE);
-  buttons[1].drawButton();
-
 
   // create 'text field'
   tft.drawRect(TEXT_X, TEXT_Y, TEXT_W, TEXT_H, WHITE);
@@ -171,7 +217,7 @@ void keyDisplay() {
   tft.setCursor(KEY_X, KEY_Y);
   tft.setTextColor(WHITE);
   tft.setTextSize(3);
-  tft.print(DEVICE_ID);
+  tft.print(key_str);
 
   delay(3000);
   tft.fillRect(INFO_X, INFO_Y, 190, 190, BLACK);
@@ -191,7 +237,7 @@ void bankDisplay() {
     tft.setCursor(INFO_X, INFO_Y + 40);
     tft.print(F("Please Register"));
     tft.setCursor(INFO_X, INFO_Y + 80);
-    tft.print(F("Click Update"));
+    tft.print(key_str);
   } else {
 
     if (pchanged == 1) {
@@ -243,94 +289,13 @@ void bankDisplay() {
 }
 
 
-
-void checkButton(void) {
-
-  digitalWrite(13, HIGH);
-  TSPoint p = ts.getPoint();
-  digitalWrite(13, LOW);
-
-  // if sharing pins, you'll need to fix the directions of the touchscreen pins
-  //pinMode(XP, OUTPUT);
-  pinMode(XM, OUTPUT);
-  pinMode(YP, OUTPUT);
-  byte rotation = 2;
-  if (p.z > MINPRESSURE && p.z < MAXPRESSURE) {
-    // scale from 0->1023 to tft.width
-    p.x = map(p.x, TS_MINX, TS_MAXX, tft.width(), 0);
-    p.y = (tft.height() - map(p.y, TS_MINY, TS_MAXY, tft.height(), 0));
-  }
-  if (rotation == 2)
-  {
-    p.x = 240 - p.x;
-    p.y = 320 - p.y;
-  }
-  else if (rotation == 1)
-  {
-    //  p.y reversed
-    p.x = 320 - p.y;
-    p.y = p.x;
-  }
-  else if (rotation == 0)
-  {
-    p.x = p.x;
-    p.y = p.y;
-  }
-  else if (rotation == 3)
-  {
-    //  p.x, p.y reversed
-    p.x = p.y;
-    p.y = 240 - p.x;
-  }
-
-  // go thru all the buttons, checking if they were pressed
-  for (uint8_t b = 0; b < 2; b++) {
-    if (buttons[b].contains(p.x, p.y)) {
-      //Serial.print("Pressing: "); Serial.println(b);
-      buttons[b].press(true);  // tell the button it is pressed
-    } else {
-      buttons[b].press(false);  // tell the button it is NOT pressed
-    }
-  }
-
-  // now we can ask the buttons if their state has changed
-  for (uint8_t b = 0; b < 2; b++) {
-    if (buttons[b].justReleased()) {
-      // Serial.print("Released: "); Serial.println(b);
-      buttons[b].drawButton();  // draw normal
-    }
-
-    if (buttons[b].justPressed()) {
-      buttons[b].drawButton(true);  // draw invert!
-
-      // key button
-      if (b == 0) {
-
-        keyDisplay();
-
-      }
-
-      // refresh
-      if (b == 1) {
-
-        refresh();
-      }
-      updateInfo = 1;
-
-
-    }
-
-  }
-
-}
-
 void refresh(void) {
-  Ciao.write(CONNECTOR, TOPIC_UP, DEVICE_ID );
+  Ciao.write(CONNECTOR, TOPIC_UP, key_str );
   delay(500); // wait for replay
   receiveAccts();
   Serial.print(F("done with rec"));
   updateInfo = 1;
-  createButton();
+  initScreen();
 }
 
 void receiveAccts(void) {
