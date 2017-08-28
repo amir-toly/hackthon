@@ -86,7 +86,7 @@ MCUFRIEND_kbv tft;
 char key_str[9]= {'\0'};
 byte updateInfo = 0;
 byte dataRfrsh = 0;
-byte pannel = 1;
+byte pannel = 0;
 byte pchanged = 0;
 byte cardScanned = 0;
 byte cardFound=0;
@@ -94,13 +94,21 @@ char acctNum[2];
 char balance[10];
 char lastAmount[10];
 char lastCat[20];
+char firstName[10];
 
 void rotate(void) {
   Serial.println(F("rotate"));
-  if (pannel == 1) {
-    pannel = 2;
-  } else {
-    pannel = 1;
+  switch (pannel)
+  {
+     case 0:
+      pannel = 1;
+      break;
+     case 1:
+      pannel = 2;
+      break;
+     case 2:
+      pannel = 0;
+      break;
   }
   pchanged = 1;
 }
@@ -129,7 +137,7 @@ void loop(void) {
   }
   rotatePanel.check();
   if (updateInfo == 1) {
-    pannel = 1;
+    pannel = 0;
 
     updateInfo = 0;
   }
@@ -242,18 +250,22 @@ void bankDisplay() {
     if(cardFound==0){
       tft.println(F("Welcome to the"));
       tft.setCursor(INFO_X + 40, INFO_Y + 60);
+      tft.setTextColor(ILI9341_DARKGREEN);
       tft.println(F("Fridge ATM"));
-      tft.setCursor(INFO_X, INFO_Y + 120);
+      tft.setTextColor(ILI9341_WHITE);
+      tft.setCursor(INFO_X, INFO_Y + 140);
       tft.print(F("Please scan your card"));
     }
     if (cardFound==1){
       tft.println(F("No info found..."));
-      tft.setCursor(INFO_X, INFO_Y + 40);
-     
-      tft.println(F("Register your card"));
+      
       tft.setCursor(INFO_X, INFO_Y + 80);
+   
+      tft.println(F("Register your card"));
+
+      tft.setCursor(INFO_X, INFO_Y + 120);
       tft.println(key_str);
-      tft.setCursor(INFO_X, INFO_Y + 1200);
+      tft.setCursor(INFO_X, INFO_Y + 140);
       tft.print(F("against your account(s)"));
     }
 
@@ -262,6 +274,15 @@ void bankDisplay() {
     if (pchanged == 1) {
       tft.fillRect(INFO_X, INFO_Y, 250, 190, BLACK);
       pchanged = 0;
+    }
+
+    if (pannel == 0){
+      tft.setTextSize(3);
+      tft.print(F("Hello"));
+      
+      tft.setCursor(INFO_X, INFO_Y + 60);
+      tft.setTextColor(BLUE);
+      tft.println(firstName);
     }
 
     if (pannel == 1) {
@@ -281,7 +302,8 @@ void bankDisplay() {
       tft.print(acctNum);
       tft.setTextColor(WHITE);
       tft.println(F(" accounts"));
-
+      
+      
     }
     if (pannel == 2) {
       tft.setTextSize(2);
@@ -339,6 +361,7 @@ void receiveAccts(void) {
 
 void parseAcctInfo(char *info) {
   //  account name|balance| last transaction
+  // 5|1455.76|230|food and drinhk|Mathias
 
   char *token;
   uint8_t k = 0;
@@ -357,7 +380,9 @@ void parseAcctInfo(char *info) {
     if (k == 3) {
       strncpy(lastCat, token, 20);
     }
-
+    if (k == 4) {
+      strncpy(firstName, token, 10);
+    }
     k++;
 
   }
