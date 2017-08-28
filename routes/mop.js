@@ -28,7 +28,7 @@ module.exports = {
                             console.log('app refresh_token:' + app.refresh_token);
                             getAccounts(app.access_token, function(err, body) {
 
-                                MQT.startAndPush(JSON.stringify(body));
+                                //MQT.startAndPush(JSON.stringify(body));
                                 console.log('accounts are: ' + body)
 
                                 Applications.findOneAndUpdate({ app_key: state },

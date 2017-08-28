@@ -6,6 +6,7 @@ var request = require('request').defaults({
 
 var MQT = require('./mqt');
 var Applications = mongoose.model('Applications');
+var User = require('../models/user');
 
 var client_id = process.env.CLIENT_ID;
 var client_secret = process.env.CLIENT_SECRET;
@@ -18,15 +19,16 @@ module.exports = {
         console.log('app_key:' + app_key)
         var refresh_token;
         var type;
+        var user_id;
         var summary = '';
         var j = 0;
         var balances_ = [];
         var transactions_ = [];
         var traList = [];
         var balList = [];
+        var user;
 
-
-        Applications.findOne({ 'app_key': app_key }, 'app_key, refresh_token, type', function (err, app) {
+        Applications.findOne({ 'app_key': app_key }, function (err, app) {
             if (err) {
                 console.log('err:' + err);
                 redirect('/error');
@@ -34,6 +36,16 @@ module.exports = {
             console.log('Applications is:' + app)
             refresh_token = app.refresh_token;
             type = app.type;
+            user_id = app.user_id;
+
+            User.findById(user_id, '_id, firstName', function (err, user1) {
+                        if (err) {
+                            console.log('err:' + err);
+                            redirect('/error');
+                        };
+                        console.log('User is:' + user1)
+                        user  = user1;
+                        });
 
             getNewAccessToken(refresh_token, function(err, body) {
                 console.log('getNewAccessToken err:' + err);
@@ -75,8 +87,8 @@ module.exports = {
 
                                         if (j == accountsLength) {
 
-                                            var mqqtMessage=formatMsg(accountsLength,balList,traList);
-                                            MQT.startAndPush("/accounts/"+app_key, mqqtMessage);
+                                            var mqqtMessage=formatMsg(user.firstName, accountsLength,balList,traList);
+                                            MQT.startAndPush("/accounts", mqqtMessage);
                                         }
 
                                         Applications.findOneAndUpdate({ app_key: app_key },
@@ -142,7 +154,7 @@ module.exports = {
         {
             if ( i > max ) return;
             i = i + 1;
-            setTimeout( function(){ recursive(i, max); }, 150 );
+            setTimeout( function(){ recursive(i, max); }, 15 );
         }
 
 
@@ -172,10 +184,10 @@ module.exports = {
             })
         }
 
-        function formatMsg(numAcct, balances, transactions) {
+        function formatMsg(firstName, numAcct, balances, transactions) {
             // numberof Acct|sum of bal|lastTrx of all|category
 
-            var total=balances.reduce(getTotal,0);
+            var total=balances.reduce(getTotal,0).toFixed(2);
             //sort all transactions
 
             transactions.sort(function(a, b){
@@ -186,7 +198,7 @@ module.exports = {
                 if(keyA > keyB) return 1;
                 return 0;
             });
-            return numAcct+"|"+total+"|"+transactions[0].amount+"|"+transactions[0].category;
+            return firstName+"|"+numAcct+"|"+total+"|"+transactions[0].amount+"|"+transactions[0].category;
 
 
         }
