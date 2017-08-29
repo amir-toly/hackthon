@@ -154,7 +154,7 @@ module.exports = {
         {
             if ( i > max ) return;
             i = i + 1;
-            setTimeout( function(){ recursive(i, max); }, 15 );
+            setTimeout( function(){ recursive(i, max); }, 1 );
         }
 
 
