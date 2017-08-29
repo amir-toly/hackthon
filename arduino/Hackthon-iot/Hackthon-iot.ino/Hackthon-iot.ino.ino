@@ -332,7 +332,7 @@ void bankDisplay() {
 
 void refresh(void) {
   Ciao.write(CONNECTOR, TOPIC_UP, key_str );
-  delay(300); // wait for replay
+  delay(1000); // wait for replay
   receiveAccts();
   Serial.print(F("done with rec"));
   updateInfo = 1;
@@ -341,7 +341,7 @@ void refresh(void) {
 
 void receiveAccts(void) {
   CiaoData data;
-  for (uint16_t i = 0; i < 500; i++) {
+  for (uint16_t i = 0; i < 700; i++) {
     data = Ciao.read(CONNECTOR, TOPIC);
     if (!data.isEmpty()) {
       const char *message = data.get(2);
@@ -368,19 +368,19 @@ void parseAcctInfo(char *info) {
 
   while ((token = strtok_r(info, "|", &info)) != NULL) {
 
-    if (k == 0) {
+    if (k == 1) {
       strncpy(acctNum, token, 2);
     }
-    if (k == 1) {
+    if (k == 2) {
       strncpy(balance, token, 10);
     }
-    if (k == 2) {
+    if (k == 3) {
       strncpy(lastAmount, token, 10);
     }
-    if (k == 3) {
+    if (k == 4) {
       strncpy(lastCat, token, 20);
     }
-    if (k == 4) {
+    if (k == 0) {
       strncpy(firstName, token, 10);
     }
     k++;
