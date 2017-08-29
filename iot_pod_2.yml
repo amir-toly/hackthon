@@ -1,0 +1,29 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: iotgateway
+  labels:
+    purpose: iotgateway
+spec:
+  containers:
+  - name: iotgateway-container
+    image: asia.gcr.io/data-audio-175707/hackathon-nodejs-app
+    env:
+    - name: DB_HOST
+      value: "mongo-hackathon"
+    - name: DB_NAME
+      value: "hackathon"
+    - name: CLIENT_ID
+      value: "VtMHGYV4qs94uBkWbEcTD1GYznmPGgFJ"
+    - name: CLIENT_SECRET
+      value: "wTcA82Zt4KsX2wP9"
+    - name: NODE_ENV
+      value: "development"
+    - name: MQTT_PORT
+      value: "10513"
+    - name: MQTT_USERNAME
+      value: "vuvawrqs"
+    - name: MQTT_PASSWORD
+      value: "HtWwI7a3emnC"
+    - name: DEBUG
+      value: "*"
