@@ -1,9 +1,9 @@
 apiVersion: v1
 kind: Pod
 metadata:
-  name: iotgateway
+  name: iotgateway2
   labels:
-    purpose: iotgateway
+    purpose: iotgateway2
 spec:
   containers:
   - name: iotgateway-container
