@@ -56,10 +56,10 @@ module.exports = {
 
                         getAccounts(app.access_token, function(err, body) {
                             var accounts_ = body;
-                            var accountsLength = body.accounts.length;
+                            var accountsLength = accounts_.accounts.length;
 
-                            for(var i = 0; i < body.accounts.length; i++) {
-                                var obj = body.accounts[i];
+                            for(var i = 0; i < accounts_.accounts.length; i++) {
+                                var obj = accounts_.accounts[i];
 
                                 console.log(obj.account_id);
 
@@ -102,10 +102,10 @@ module.exports = {
                             }
 
                             //MQT.startAndPush("/topic/accounts", JSON.stringify(body));
-                            console.log('accounts are: ' + body)
+                            console.log('accounts are: ' + accounts_)
 
                             Applications.findOneAndUpdate({ app_key: app_key },
-                                {$set: {accounts: body}},
+                                {$set: {accounts: accounts_}},
                                 function(err, app){
                                     if(err) console.log('Error updating Applications');
                                     //res.send(200);
