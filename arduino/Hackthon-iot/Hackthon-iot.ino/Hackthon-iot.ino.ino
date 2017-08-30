@@ -332,7 +332,7 @@ void bankDisplay() {
 
 void refresh(void) {
   Ciao.write(CONNECTOR, TOPIC_UP, key_str );
-  delay(1000); // wait for replay
+  delay(2500); // wait for replay
   receiveAccts();
   Serial.print(F("done with rec"));
   updateInfo = 1;
@@ -341,7 +341,7 @@ void refresh(void) {
 
 void receiveAccts(void) {
   CiaoData data;
-  for (uint16_t i = 0; i < 700; i++) {
+  for (uint16_t i = 0; i < 2000; i++) {
     data = Ciao.read(CONNECTOR, TOPIC);
     if (!data.isEmpty()) {
       const char *message = data.get(2);
@@ -352,7 +352,7 @@ void receiveAccts(void) {
       updateInfo = 1;
       break;
     }
-    delay(10);
+    delay(5);
   }
   Serial.println(F("give up!"));
 }
